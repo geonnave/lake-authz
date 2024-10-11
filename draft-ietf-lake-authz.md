@@ -744,7 +744,7 @@ DOMAIN_ID: bstr
 
 Where:
 
-- ELA_ID identifies the ELA protocol (NOTE: can we register such an identifier at IANA?)
+- ELA_ID identifies the ELA protocol (Editor's note: can we register such an identifier at IANA?)
 - DOMAIN_ID identifies the domain to which V belongs to, for example an URL or UUID
 
 Details on how exatcly these fields are structured are left to the application.
@@ -906,18 +906,50 @@ IANA has added the following Content-Format number in the "CoAP Content-Formats"
 
 # Use with EDHOC reverse flow {#edhoc-reverse}
 
-This appendix describes how the protocol can be used with the reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, where the CoAP client is the Responder and the CoAP server is the initiator.
-One use case is to perform ELA over Bluetooth Low Energy, as discussed in {{I-D.amsuess-core-coap-over-gatt}}.
+Editor's note: I am not sure if this should be an appendix or an actual section in the main document.
 
-{{fig-reverse}} illustrates the reverse flow for ELA.
-The main change is that the values of the Voucher_Info and Voucher structs are sent over EAD_2 and EAD_3, respectively (instead of over EAD_1 and EAD_2).
+This appendix describes how the protocol can be used with the reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, where the CoAP client is the Responder and the CoAP server is the initiator.
+
+## U is the Initiator {#reverse-u-init}
+
+The reverse flow can be applied when U implements a CoAP server, but acts as an EDHOC Initiator.
+In this case, U awaits for a CoAP request to be sent from V, which will act as a trigger message to start the EDHOC handshake with ELA.
+Next, U replies with an EDHOC message_1, thus executing the protocol normally.
+
+~~~~~~~~~~~ aasvg
++-------+--------+                +-------+--------+
+| Init  | Server |                | Resp  | Client |
++-------+--------+                +----------------+
+|       U        |                |       V        |
++----------------+                +----------------+
+        |                                 |
+        |          CoAP request           |
+        |<--------------------------------|
+        |                                 |
+        |        EDHOC message_1          |
+        +-------------------------------->|
+        |     (EAD_1 = Voucher_Info)      |
+        |                                 |
+
+      ( ... protocol continues normally ... )
+
+~~~~~~~~~~~
+{: #fig-reverse-u-init title="ELA with EDHOC reverse mesasge flow when U is initiator." artwork-align="center"}
+
+## U is the Responder {#reverse-u-resp}
+
+U may implement a CoAP client, but act as a Responder, as illustrated in {{fig-reverse}}.
+The main change in this case is that the values of the Voucher_Info and Voucher structs are sent over EAD_2 and EAD_3, respectively (instead of over EAD_1 and EAD_2).
 
 ~~~~~~~~~~~ aasvg
 +-------+--------+          +-------+--------+         +---------------+
-| Init  | Server |          | Resp  | Client |         |               |
+| Resp  | Client |          | Init  | Server |         |               |
 +-------+--------+          +----------------+         |       W       |
 |       U        |          |       V        |         |               |
 +----------------+          +----------------+         +---------------+
+        |                           |                          |
+        |       CoAP request        |                          |
+        +-------------------------->|                          |
         |                           |                          |
         |     EDHOC message_1       |                          |
         +<--------------------------|                          |
@@ -934,43 +966,6 @@ The main change is that the values of the Voucher_Info and Voucher structs are s
         |     (EAD_3 = Voucher)     |                          |
 ~~~~~~~~~~~
 {: #fig-reverse title="Use with EDHOC reverse mesasge flow." artwork-align="center"}
-
-# Example Advertisement Strategies {#example-advert}
-
-## Advertisement in the EDHOC reverse flow
-
-ELA with EDHOC in the reverse flow allows implementing advertising where U first sends a trigger packet, in the format of a CoAP solicitation packet that is broadcasted to the newtork.
-When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 contains some information about V (V_INFO as described in Section {{optimization-strat}}).
-In this case, EAD_1 uses label TBD1 and value V_INFO.
-
-~~~~~~~~~~~ aasvg
-+-------+--------+                +-------+--------+
-| Init  | Server |                | Resp  | Client |
-+-------+--------+                +----------------+
-|       U        |                |       V        |
-+----------------+                +----------------+
-        |                                 |
-        +- - - - - - - - - - - - - - - -->|
-        |   CoAP discovery/solicitation   |
-        |                                 |
-        |        EDHOC message_1          |
-        +<--------------------------------|
-        |       (?EAD_1 = V_INFO)         |
-        |                                 |
-
-      ( ... protocol continues normally ... )
-
-~~~~~~~~~~~
-{: #fig-reverse-adv title="Advertisement of ELA support with EDHOC reverse mesasge flow." artwork-align="center"}
-
-Note that V will only reply if it supports ELA, therefore in this strategy there is no need to transport ELA_ID as part of V_INFO.
-V_INFO can then be structured to contain only the optional domain identifier:
-
-~~~ cddl
-V_INFO = (
-  ?DOMAIN_ID: bstr,
-)
-~~~
 
 # Use with Constrained Join Protocol (CoJP)
 
@@ -1075,6 +1070,43 @@ The authenticator playing the role of the {{RFC9031}} JRC obtains the device ide
 
 Flight 4 is the OSCORE response carrying CoJP response message.
 The message is processed as specified in {{Section 8.4.2 of RFC9031}}.
+
+# Example Advertisement Strategies {#example-advert}
+
+## EDHOC reverse flow when U is Initiator and CoAP Server
+
+_PR editor's note: this is approach A2_
+
+ELA with EDHOC in the reverse flow allows implementing advertising where U first sends a trigger packet, in the format of a CoAP solicitation packet that is broadcasted to the newtork.
+When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has label TBD1 and value V_INFO (see Section {{optimization-strat}}).
+
+~~~~~~~~~~~ aasvg
++-------+--------+                +-------+--------+
+| Init  | Server |                | Resp  | Client |
++-------+--------+                +----------------+
+|       U        |                |       V        |
++----------------+                +----------------+
+        |                                 |
+        +- - - - - - - - - - - - - - - -->|
+        |   CoAP discovery/solicitation   |
+        |                                 |
+        |        EDHOC message_1          |
+        +<--------------------------------|
+        |       (?EAD_1 = V_INFO)         |
+        |                                 |
+
+      ( ... protocol continues normally ... )
+~~~~~~~~~~~
+{: #fig-reverse-adv title="Advertisement of ELA support with EDHOC reverse mesasge flow." artwork-align="center"}
+
+Note that V will only reply if it supports ELA, therefore in this strategy there is no need to transport ELA_ID.
+V_INFO can then be structured to contain only the optional domain identifier:
+
+~~~ cddl
+V_INFO = (
+  ?DOMAIN_ID: bstr,
+)
+~~~
 
 # Enrollment Hints {#hints}
 This section defines items that can be used in the OPAQUE_INFO field of either EAD_1 or the Access Denied error response.
