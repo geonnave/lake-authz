@@ -1,3 +1,3 @@
 # Automatically generated CODEOWNERS
 # Regenerate with `make update-codeowners`
-draft-selander-ace-ake-authz.md goran.selander@ericsson.com john.mattsson@ericsson.com malisa.vucinic@inria.fr mcr+ietf@sandelman.ca aureliorubendario.schellenbaum@zhaw.ch
+draft-ietf-lake-authz.md goran.selander@ericsson.com john.mattsson@ericsson.com malisa.vucinic@inria.fr geovane.fedrecheski@inria.fr mcr+ietf@sandelman.ca

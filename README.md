@@ -1,11 +1,11 @@
-# Lightweight Authorization for EDHOC
+# Lightweight Authorization using Ephemeral Diffie-Hellman Over COSE
 
-This is the working area for the individual Internet-Draft, "Lightweight Authorization for EDHOC.".
+This is the working area for the IETF [LAKE Working Group](https://datatracker.ietf.org/wg/lake/documents/) Internet-Draft, "Lightweight Authorization using Ephemeral Diffie-Hellman Over COSE".
 
 * [Editor's Copy](https://lake-wg.github.io/authz/#go.draft-ietf-lake-authz.html)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-ietf-lake-authz)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-ietf-lake-authz)
-* [Compare Editor's Copy to Individual Draft](https://lake-wg.github.io/authz/#go.draft-ietf-lake-authz.diff)
+* [Working Group Draft](https://datatracker.ietf.org/doc/html/draft-ietf-lake-authz)
+* [Compare Editor's Copy to Working Group Draft](https://lake-wg.github.io/authz/#go.draft-ietf-lake-authz.diff)
 
 
 ## Contributing

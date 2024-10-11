@@ -888,10 +888,10 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor" to t
     * Magic number(s): N/A
     * File extension(s): N/A
     * Macintosh file type code(s): N/A
-* Person & email address to contact for further information: See "Authors' Addresses" section.
+* Person & email address to contact for further information: IETF LAKE Working Group (lake@ietf.org)
 * Intended usage: COMMON
 * Restrictions on usage: N/A
-* Author: See "Authors' Addresses" section.
+* Author: LAKE WG
 * Change Controller: IESG
 
 ## CoAP Content-Formats Registry
