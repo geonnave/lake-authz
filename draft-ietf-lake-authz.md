@@ -416,7 +416,6 @@ It consists of 'ciphertext' of COSE_Encrypt0 ({{Section 5.2 of RFC9052}}) compu
 ~~~~~~~~~~~ cddl
 plaintext = (
     ID_U:            bstr,
-    ?OPAQUE_INFO:    bstr,
 )
 ~~~~~~~~~~~
 ~~~~~~~~~~~ cddl
@@ -428,12 +427,6 @@ external_aad = (
 where
 
 * ID_U is an identifier of the device, see {{device}}.
-
-* OPAQUE_INFO is an opaque field provided by the application.
-If present, it will contain application data that U may want to convey to W, e.g., enrollment hints, see {{hints}}.
-Note that OPAQUE_INFO is opaque when viewed as an information element in EDHOC.
-It is opaque to V, while the application in U and W can read its contents.
-The same applies to other references of OPAQUE_INFO throughout this document.
 
 * SS is the selected cipher suite in SUITES_I of EDHOC message_1, see {{U-V}}.
 
@@ -485,8 +478,13 @@ external_aad = (
 where
 
 * OPAQUE_INFO is an opaque field provided by the application.
+If present, it will contain application data that W may want to convey to U, e.g., a voucher scope.
+Note that OPAQUE_INFO is opaque when viewed as an information element in EDHOC.
+It is opaque to V, while the application in U and W can read its contents.
+
 * H_message_1 is the hash of EDHOC message_1, calculated from the associated voucher request, see {{voucher_request}}.
 The hash is computed by using the EDHOC hash algorithm of the selected cipher suite specified in SUITE_I of EDHOC message_1.
+
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
 The derivation of K_2 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
@@ -539,6 +537,7 @@ U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3
 
 If U does not recognize the EAD item or the EAD item contains information that U cannot process, then U MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}. Otherwise, U MUST verify the Voucher using H_message_1, CRED_V, and the keys derived as in {{voucher}}. If the verification fails then U MUST abort the EDHOC session.
 
+If OPAQUE_INFO is present, it is made available to the application.
 
 ### Message 3
 
@@ -586,11 +585,9 @@ W extracts from message_1:
 
 * SS - the selected cipher suite, which is the (last) integer of SUITES_I.
 * G_X - the ephemeral public key of U
-* ENC_U_INFO - the encryption of (1) the device identifier ID_U and (2) the optional OPAQUE_INFO field, contained in the Voucher_Info field of the EAD item with ead_label = TBD1 (with minus sign indicating criticality)
+* ENC_U_INFO - the encryption of the device identifier ID_U, contained in the Voucher_Info field of the EAD item with ead_label = TBD1 (with minus sign indicating criticality)
 
 W verifies and decrypts ENC_U_INFO using the relevant algorithms of the selected cipher suite SS (see {{reuse}}), and obtains ID_U.
-
-In case OPAQUE_INFO is present, it is made available to the application.
 
 W calculates the hash of message_1 H_message_1, and associates this session identifier to the device identifier ID_U.
 Note that message_1 contains a unique ephemeral key, therefore H_message_1 is expected to be unique.
@@ -1194,31 +1191,6 @@ V_INFO = (
 
 One advantage of this approach is that, since U is the initiator, it's identity is protected in the context of the EDHOC handshake.
 On the other hand, the periodic multicast may have resource usage impacts in the network.
-
-# Enrollment Hints {#hints}
-This section defines items that can be used in the OPAQUE_INFO field of either EAD_1 or the Access Denied error response.
-The purpose of the proposed items is to improve protocol scalability, aiming to reduce battery usage and enrollment delay.
-The main use case is when several potential gateways (V) are detected by U's radio, which can lead to U trying to enroll (and failing) several times until it finds a suitable V.
-
-## Domain Authenticator hints
-In case W denies the enrollment of U to a given V, a list of Domain Authenticator hints (v_hint) can be sent from W to U.
-The hint is optional and is included in the REJECT_INFO item in the Access Denied error message.
-It consists of a list of application-defined identifiers of V (e.g. MAC addresses, SSIDs, PAN IDs, etc.), as defined below:
-
-~~~ cddl
-v_hint = [ + bstr ]
-~~~
-
-## Device Hints
-U may send a Device hint (u_hint) so that it can help W to select which Vs to include in v_hint.
-This can be useful in large scale scenarios with many gateways (V).
-The hint is an optional field included in the OPAQUE_INFO field within EAD_1, and it must be encrypted.
-The hint itself is application dependent, and can contain GPS coordinates, application-specific tags, the list of Vs detected by U, or other relevant information.
-It is defined as follows:
-
-~~~ cddl
-u_hint = [ + bstr ]
-~~~
 
 # Examples
 This section presents high level examples of the protocol execution.
