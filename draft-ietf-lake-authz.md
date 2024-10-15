@@ -936,6 +936,8 @@ Next, U replies with an EDHOC message_1, thus executing the protocol normally.
 ~~~~~~~~~~~
 {: #fig-reverse-u-init title="ELA with EDHOC reverse mesasge flow when U is initiator." artwork-align="center"}
 
+One use case is to perform ELA over Bluetooth Low Energy, as discussed in {{I-D.amsuess-core-coap-over-gatt}}.
+
 ## U is the Responder {#reverse-u-resp}
 
 U may implement a CoAP client, but act as a Responder, as illustrated in {{fig-reverse}}.
