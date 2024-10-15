@@ -707,7 +707,7 @@ where
 When ELA is used for zero-touch enrollment, U normally has little to no knowledge of the available V's.
 This may lead to situations where U has to retry several times at different V's until it finds one that works.
 This section presents two optimization strategies for such cases.
-They were developed to address scenarios where V's are radio gateways to which U wants to enroll.
+They were developed to address scenarios where V's are radio gateways to which U wants to enroll, but may also be applicable to other use cases.
 
 ## U anycasts message_1 {#strat-anycast}
 
@@ -717,22 +717,22 @@ When each of the V's in radio range of U receive message_1, one of the following
 - V does not implement EDHOC, and drops the message
 - V does not implement ELA, and since EAD_1 is critical, it either responds with an error or drops the message (preferred)
 - V forwards message_1 to W as VREQ, but W does not authorize it, and error handling is applied
-- V forwards message_1 to W as VREQ, W authorizes it, and the protocol flows normally
+- V forwards message_1 to W as VREQ, W authorizes it, and the protocol continues normally
 
 U is expected to receive at most one message_2 as response, which contains the Voucher.
 In case U receives additional message_2's, they MUST be silently dropped.
 
 This strategy may increase the number of messages that need to be processed by V and W, in exchange for reducing resource usage in U.
 
-Security concerns related to this strategy, including potential reuse of G_X and double processing of message_2, are discussed in Section {{sec-cons}}.
+Security concerns related to this strategy, including potential reuse of G_X and double processing of message_2, are discussed in {{sec-cons}}.
 
 ## V advertises support for ELA {#strat-advertise}
 
-In this strategy, V shares some information (V_INFO) with a potential U, that can help it decide whether to try to enroll in that V.
+In this strategy, V shares some information (V_INFO) with a potential U, that can help it decide whether to try to enroll with that V.
 For example, V may send a V_INFO stating that:
 
 - V implements ELA -- similarly to how EAPOL {{IEEE802.1X}} frames state support for IEEE 802.1X
-- V is part of a certain domain -- similarly to how Eduroam {{RFC7593}} is used in the SSID field for IEEE 802.11 networks
+- V is part of a certain domain -- similarly to how Eduroam {{RFC7593}} is used in the SSID field of IEEE 802.11 packets
 
 The mechanism used to transport V_INFO will depend on the underlying communication technology and also on application needs.
 
@@ -750,8 +750,7 @@ Where:
 
 Details on how exatcly these fields are structured are left to the application.
 
-Examples of how the advertisement strategy may be applied according to different application needs are presented in {{example-advert}}.
-
+{{example-advert}} presents three examples of how the advertisement strategy may be applied according to different application needs.
 
 # REST Interface at W {#rest_interface}
 
@@ -945,28 +944,28 @@ The reverse flow can also be used when U implements a CoAP client, but acts as a
 The main change in this case is that the values of the Voucher_Info and Voucher structs are sent over EAD_2 and EAD_3, respectively (instead of over EAD_1 and EAD_2).
 
 ~~~~~~~~~~~ aasvg
-+-------+--------+          +-------+--------+         +---------------+
-| Resp  | Client |          | Init  | Server |         |               |
-+-------+--------+          +----------------+         |       W       |
-|       U        |          |       V        |         |               |
-+----------------+          +----------------+         +---------------+
-        |                           |                          |
-        |       CoAP request        |                          |
-        +-------------------------->|                          |
-        |                           |                          |
-        |     EDHOC message_1       |                          |
-        +<--------------------------|                          |
-        |                           |                          |
-        |     EDHOC message_2       |                          |
-        +-------------------------->|                          |
-        |   (EAD_2 = Voucher_Info)  |                          |
-        |                           +------------------------->|
-        |                           |  Voucher Request (VREQ)  |
-        |                           |<-------------------------+
-        |                           |  Voucher Response (VRES) |
-        |     EDHOC message_3       |                          |
-        +<--------------------------|                          |
-        |     (EAD_3 = Voucher)     |                          |
++-------+--------+          +-------+--------+
+| Resp  | Client |          | Init  | Server |
++-------+--------+          +----------------+
+|       U        |          |       V        |
++----------------+          +----------------+
+        |                           |
+        |       CoAP request        |
+        +-------------------------->|
+        |                           |
+        |     EDHOC message_1       |
+        +<--------------------------|
+        |                           |
+        |     EDHOC message_2       |               W
+        +-------------------------->|               |
+        |   (EAD_2 = Voucher_Info)  |               |
+        |                           +-------------->|
+        |                           |  VREQ / VRES  |
+        |                           |<------------->|
+        |                           |               |
+        |     EDHOC message_3       |               |
+        +<--------------------------|
+        |     (EAD_3 = Voucher)     |
 ~~~~~~~~~~~
 {: #fig-reverse title="ELA with EDHOC reverse mesasge flow when U is responder." artwork-align="center"}
 
