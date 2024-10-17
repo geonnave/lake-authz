@@ -941,7 +941,10 @@ One use case is to perform ELA over Bluetooth Low Energy, as discussed in {{I-D.
 ## U is the Responder {#reverse-u-resp}
 
 The reverse flow can also be used when U implements a CoAP client, but acts as a Responder, as illustrated in {{fig-reverse}}.
-The main change in this case is that the values of the Voucher_Info and Voucher structs are sent over EAD_2 and EAD_3, respectively (instead of over EAD_1 and EAD_2).
+The main changes in this case are:
+
+- Instead of sending EDHOC message_1, U sends an initial trigger packet to V, e.g., a CoAP request, which then initiates the handshake by replying with an EDHOC message_1.
+- The Voucher_Info and Voucher structs are sent over EAD_2 and EAD_3, respectively (instead of over EAD_1 and EAD_2).
 
 ~~~~~~~~~~~ aasvg
 +-------+--------+          +-------+--------+
@@ -1124,12 +1127,12 @@ When a suitable V receives the solicitation, if it implements ELA, it should res
 
 ~~~~~~~~~~~ aasvg
 +-------+--------+                +-------+--------+
-| Resp  | Server |                | Init  | Client |
+| Resp  | Client |                | Init  | Server |
 +-------+--------+                +----------------+
 |       U        |                |       V        |
 +----------------+                +----------------+
         |                                 |
-        +- - - - - - - - - - - - - - - -->|
+        +-------------------------------->|
         |   CoAP discovery/solicitation   |
         |                                 |
         |        EDHOC message_1          |
