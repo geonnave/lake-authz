@@ -91,6 +91,7 @@ informative:
   I-D.ietf-core-oscore-edhoc:
   I-D.ietf-lake-reqs:
   I-D.amsuess-core-coap-over-gatt:
+  I-D.ietf-lake-edhoc-impl-cons:
   IEEE802.15.4:
     title: "IEEE Std 802.15.4 Standard for Low-Rate Wireless Networks"
     author:
@@ -165,11 +166,12 @@ Note the cardinality of the involved parties. It is expected that the domain aut
 
                 Voucher
                 Info
-+----------+      |     +---------------+  Voucher  +---------------+
-|          |      |     |               |  Request  |               |
-|  Device  +------o---->|    Domain     +---------->|   Enrollment  |
-|          |<---o-------+ Authenticator |<----------+     Server    |
-|   (U)    +----+------>|      (V)      |  Voucher  |      (W)      |
++----------+      |     +---------------+           +---------------+
+|          +------+---->|               |  Voucher  |               |
+|          |<-----+-----+    Domain     |  Request  |   Enrollment  |
+|  Device  +------o---->| Authenticator +---------->|     Server    |
+|          |<---o-------+               |<----------+               |
+|   (U)    |    |       |      (V)      |  Voucher  |      (W)      |
 |          |    |       |               |  Response |               |
 +----------+    |       +---------------+           +---------------+
               Voucher
@@ -291,40 +293,31 @@ U                              V                                       W
                           CORE PROTOCOL
 
 |                              |                                       |
+|                              |                                       |
 |         EDHOC message_1      |                                       |
 +----------------------------->|                                       |
-|  (EAD_1 = LOC_W, ENC_U_INFO) |                                       |
-|                              |                                       |
-|                              |        Voucher Request (VREQ)         |
-|                              +-------------------------------------->|
-|                              |       (message_1, ?opaque_state)      |
-|                              |                                       |
-|                              |        Voucher Response (VRES)        |
-|                              |<--------------------------------------+
-|                              | (message_1, ?Voucher, ?opaque_state)  |
 |                              |                                       |
 |         EDHOC message_2      |                                       |
 |<-----------------------------+                                       |
-|        (EAD_2 = Voucher)     |                                       |
 |                              |                                       |
 |                              |                                       |
 |         EDHOC message_3      |                                       |
 +----------------------------->|                                       |
+| (EAD_3 = LOC_W, ENC_U_INFO)  |                                       |
+|                              |                                       |
+|                              |        Voucher Request (VREQ)         |
+|                              +-------------------------------------->|
+|                              |      (SS, G_X, ENC_U_INFO, TH_3)      |
+|                              |                                       |
+|                              |        Voucher Response (VRES)        |
+|                              |<--------------------------------------+
+|                              |          (Voucher, ?CRED_I)           |
+|                              |                                       |
+|         EDHOC message_4      |                                       |
+|<-----------------------------+                                       |
+|        (EAD_4 = Voucher)     |                                       |
 |                              |                                       |
 
-------------------------------------------------------------------------
-
-|                              |
-|                              |                              Credential
-|                              |                                Database
-|                              |                                       |
-|                              |       ID_CRED_I from message_3        |
-|                              +---  ---  ---  ---   ---  ---  ---  -->|
-|                              |                                       |
-|                              |                 CRED_U                |
-|                              |<--  ---  ---  ---  ---   ---  ---  ---+
-|                              |                                       |
-|                              |                                       |
 ~~~~~~~~~~~
 {: #fig-protocol title="Overview of ELA: W-assisted authorization of U and V to each other: EDHOC between U and V, and Voucher Request/Response between V and W. Before the protocol, V and W are assumed to have established a secure channel and performed proof-of-possession of relevant keys. Credential lookup of CRED_U may involve W or other credential database." artwork-align="center"}
 
@@ -343,7 +336,7 @@ In case U acts as Responder (see {{reverse-u-responder}}), G_Y is used instead.
     * EDHOC hash algorithm: used for key derivation
     * EDHOC key exchange algorithm: used to calculate the shared secret between U and W
 
-* EAD_1, EAD_2 are the External Authorization Data message fields of message_1 and message_2, respectively, see {{Section 3.8 of RFC9528}}.
+* EAD_3, EAD_4 are the External Authorization Data message fields of message_3 and message_4, respectively, see {{Section 3.8 of RFC9528}}.
 In case U acts as Responder (see {{reverse-u-responder}}), EAD_2 and EAD_3 are used in message_2 and message_3, respectively.
 This document specifies two new EAD items, with ead_label = TBD1 and TBD2, see {{iana-ead}}.
 
@@ -373,29 +366,9 @@ info = (
 ~~~~~~~~~~
 
 
-## Stateless Operation of V {#stateless-v}
-
-V may act statelessly with respect to U: the state of the EDHOC session started by U may be dropped at V until authorization from W is received.
-Once V has received EDHOC message_1 from U and extracted LOC_W from EAD_1, message_1 is forwarded unmodified to W in the form of a Voucher Request (see {{voucher_request}}).
-V encapsulates the internal state that it needs to later respond to U, and sends that to W together with EDHOC message_1.
-This state typically contains addressing information of U (e.g., U's IP address and port number), together with any other implementation-specific parameter needed by V to respond to U.
-At this point, V can drop the EDHOC session that was initiated by U.
-
-The encapsulated state MUST be protected using a uniformly-distributed (pseudo-)random key, known only to itself and specific for the current EDHOC session to prevent replay attacks of old encapsulated state.
-
-How V serializes and encrypts its internal state is out of scope in this specification.
-For example, V may use CBOR and COSE.
-
-W sends to V the voucher together with the echoed message_1, as received from U, and V's internal state, see {{voucher_response}}.
-This allows V to act as a simple message relay until it has obtained the authorization from W to enroll U.
-The reception of a successful Voucher Response at V from W implies the authorization for V to enroll U.
-At this point, V can initialize a new EDHOC session with U, based on the message and the state retrieved from the Voucher Response from W.
-
-Noet that while stateless operation is supported in the default flow, it is not supported in the reverse flow (see {{reverse-u-responder}}).
-
 ## Device <-> Enrollment Server (U <-> W) {#U-W}
 
-The protocol between U and W is carried between U and V in message_1 and message_2 ({{U-V}}), and between V and W in the Voucher Request/Response ({{V-W}}). The data is protected between the endpoints using secret keys derived from a Diffie-Hellman shared secret (see {{reuse}}) as further detailed in this section.
+The protocol between U and W is carried between U and V in message_3 and message_4 ({{U-V}}), and between V and W in the Voucher Request/Response ({{V-W}}). The data is protected between the endpoints using secret keys derived from a Diffie-Hellman shared secret (see {{reuse}}) as further detailed in this section.
 
 ### Voucher Info {#voucher_info}
 
@@ -429,24 +402,18 @@ plaintext = (
 ~~~~~~~~~~~
 ~~~~~~~~~~~ cddl
 external_aad = [ ; used as a CBOR sequence, not array
-    "ELA-voucher-info": tstr, ; fixed label
-    METHOD:             int,
-    SS:                 int,
-    C_I:                bstr
+    TH_2:               bstr,
+    ID_CRED_R:          bstr,
 ]
 ~~~~~~~~~~~
 
 where
 
-* "ELA-voucher-info" is a string literal for the Voucher_Info struct.
-
 * ID_U is an identifier of the device, see {{device}}.
 
-* METHOD is the authentication method of EDHOC message_1.
+* TH_2 is the transcript hash received in EDHOC message_2.
 
-* SS is the selected cipher suite in SUITES_I of EDHOC message_1, see {{U-V}}.
-
-* C_I is the connection identifier of EDHOC message_1.
+* ID_CRED_R is the credential identifier of V received in EDHOC message_2.
 
 The external_aad is wrapped in an enc_structure as defined in {{Section 5.3 of RFC9052}}.
 
@@ -464,8 +431,7 @@ The derivation of IV_1 = EDHOC_Expand(PRK, info, length) uses the following inpu
 
 ### Voucher {#voucher}
 
-The external authorization data EAD_2 contains a critical EAD item with ead_label = -TBD2.
-If W generates a Voucher, the EAD item also contains ead_value = Voucher, otherwise ead_value is absent.
+The external authorization data EAD_4 contains an EAD item with ead_label = TBD2 and ead_value = Voucher.
 
 The voucher is an assertion to U that W has authorized V.
 It is encrypted using the EDHOC AEAD algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
@@ -476,7 +442,7 @@ Voucher = bstr
 ~~~~~~~~~~~
 
 Its corresponding plaintext value consists of an opaque field that can be used by W to convey information to U, such as a voucher scope.
-The authentication tag present in the ciphertext is also bound to message_1 and the credential of V as described below.
+The authentication tag present in the ciphertext is also bound to message_3 and the credential of V as described below.
 
 * The encryption key K_2 and nonce IV_2 are derived as specified below.
 * 'protected' is a byte string of size 0
@@ -501,7 +467,7 @@ If present, it will contain application data that W may want to convey to U, e.g
 Note that OPAQUE_INFO is opaque when viewed as an information element in EDHOC.
 It is opaque to V, while the application in U and W can read its contents.
 
-* H_handshake is the hash of EDHOC message_1, sent by V as part of the voucher request, see {{voucher_request}}.
+* H_handshake is the hash of EDHOC message_3, sent by V as part of the voucher request, see {{voucher_request}}.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
@@ -525,26 +491,22 @@ This section describes the processing in U and V, which includes the EDHOC proto
 
 #### Processing in U
 
-U composes EDHOC message_1 using authentication method, identifiers, etc. according to an agreed application profile, see {{Section 3.9 of RFC9528}}. The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the Diffie-Hellman key agreement algorithm used between U and W. As part of the normal EDHOC processing, U generates the ephemeral public key G_X that is reused in the interaction with W, see {{U-W}}.
-
-The device sends EDHOC message_1 with EAD item (-TBD1, Voucher_Info) included in EAD_1, where Voucher_Info is specified in {{U-W}}. The negative sign indicates that the EAD item is critical, see {{Section 3.8 of RFC9528}}.
-
+U composes EDHOC message_1 using authentication method, identifiers, etc. according to an agreed application profile, see {{Section 3.9 of RFC9528}}.
+The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the Diffie-Hellman key agreement algorithm used between U and W.
+As part of the normal EDHOC processing, U generates the ephemeral public key G_X that is reused in the interaction with W, see {{U-W}}.
+U sends EDHOC message_1 to V.
 
 #### Processing in V
 
-V receives EDHOC message_1 from U and processes it as specified in {{Section 5.2.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_1. Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}. Otherwise, the ead_label = -TBD1 triggers the voucher request to W as described in {{V-W}}. The exchange between V and W needs to be completed successfully for the EDHOC session to be continued.
+V processes EDHOC message_1 as specified in {{RFC9528}}.
 
-Note that the selected cipher suite SS is used both in the U <-> W and U <-> V interactions, therefore V must be ready to use the cipher suite SS set by U in message_1.
-That is, ELA restricts the cipher suite negotiation in order to provide a streamlined authorization flow from the perspective of U.
-Since V has a pre-established trusted channel with W, it has the opportunity to learn which cipher suites should be supported before any authorization attempt begins to take place.
+Note that as part of normal EDHOC processing, U and V may negotiate a selected cipher suite SS, as specified in {{Section 6.3.1 of RFC9528}}.
 
 ### Message 2 {#m2}
 
 #### Processing in V  {#V_2}
 
-V receives the voucher response from W as described in {{V-W}}.
-
-V sends EDHOC message_2 to U with the critical EAD item (-TBD2, ?Voucher) included in EAD_2, i.e., ead_label = -TBD2 and, if the Voucher is present, ead_value = Voucher, as specified in {{voucher}}.
+V composes EDHOC message_2 as specified in {{Section 5.3.3 of RFC9528}}.
 
 The type of CRED_V may depend on the selected mechanism for the establishment of a secure channel between V and W, See {{creds-table}}.
 
@@ -552,38 +514,59 @@ In case the network between U and V is constrained, it is recommended that CRED_
 The CCS contains the public authentication key of V encoded as a COSE_Key in the 'cnf' claim, see {{Section 3.5.2 of RFC9528}}.
 ID_CRED_R contains the CWT Claims Set with 'kccs' as COSE header_map, see {{Section 10.6 of RFC9528}}.
 
-
 #### Processing in U
 
-U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_2.
-
-U first verifies that the EAD item contains the expected ead_label, see {{iana-ead}}.
-
-If U does not recognize the EAD item or the EAD item contains information that U cannot process, then U MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
-
-When the Voucher is present, U MUST verify the Voucher using H_message_1, CRED_V, and the keys derived as in {{voucher}}.
-If the Voucher verification fails then U MUST abort the EDHOC session.
-
-If OPAQUE_INFO is present, it is made available to the application.
+U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}.
+The device obtains the transcript hash TH_2 and the credential identifier ID_CRED_R, used to prepare Voucher_Info as detailed in {{voucher_info}}.
 
 ### Message 3
 
 #### Processing in U
 
-If all verifications are passed, then U sends EDHOC message_3.
+U prepares EDHOC message_3 with EAD item (-TBD1, Voucher_Info) included in EAD_3, where Voucher_Info is specified in {{U-W}}.
+The negative sign indicates that the EAD item is critical, see {{Section 3.8 of RFC9528}}.
 
 EDHOC message_3 may be combined with an OSCORE-protected application request, see {{I-D.ietf-core-oscore-edhoc}}.
 
 #### Processing in V
 
-V performs the normal EDHOC verifications of message_3. V may retrieve CRED_U from a Credential Database, after having learned ID_CRED_I from U.
+V receives EDHOC message_3 from U and processes it as specified in {{Section 5.4.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_3.
+Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
+Otherwise, the ead_label = TBD1 triggers the voucher request to W as described in {{V-W}}.
+The exchange between V and W needs to be completed successfully for the EDHOC session to be continued.
+
+As part of normal processing of EDHOC message_3, V must verify the credential of U.
+It is up to the application to decide whether to verify the credential of U before or after the voucher request to W, see pre and post -verification processing of EAD items in {{I-D.ietf-lake-edhoc-impl-cons}}.
+
+In case V has access to a credential database, it MAY query it with ID_CRED_I to obtain a corresponding CRED_U and verify the identity of U before making the Voucher request to W.
+
+Alternatively, V MAY include ID_CRED_I as part of the voucher request sent to W.
+In this case, a valid Voucher response from W will contain a corresponding CRED_U, see {{V-W}}.
+V MUST verify the credential of U using the CRED_U received from W.
+
+Even upon reception of a valid Voucher from W, if the verification of CRED_U fails, the EDHOC session is aborted.
+
+### Message 4 {#m4}
+
+#### Processing in V  {#V_4}
+
+At this point, V has authenticated U, and received a valid voucher response from W as described in {{V-W}}.
+
+V sends EDHOC message_4 to U with the critical EAD item (-TBD2, Voucher) included in EAD_4, i.e., ead_label = TBD2 and ead_value = Voucher, as specified in {{voucher}}.
+
+#### Processing in U
+
+U receives EDHOC message_4 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_4.
+
+If U does not recognize the EAD item or the EAD item contains information that U cannot process, then U MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
+Otherwise, U MUST verify the Voucher using H_message_3, CRED_V, and the keys derived as in {{voucher}}. If the verification fails then U MUST abort the EDHOC session.
+
+If OPAQUE_INFO is present, it is made available to the application.
 
 ## Authenticator <-> Enrollment Server (V <-> W) {#V-W}
 
 It is assumed that V and W have set up a secure connection, W has accessed the authentication credential CRED_V to be used in the EDHOC session between V and U, and that W has verified that V is in possession of the private key corresponding to CRED_V, see {{domain-auth}} and {{authz-server}}.
 V and W run the Voucher Request/Response protocol over the secure connection.
-
-
 
 ### Voucher Request {#voucher_request}
 
@@ -598,7 +581,7 @@ Voucher_Request = [
     G_U:            bstr,
     Voucher_Info:   bstr,
     H_handshake:    bstr,
-    ? opaque_state: bstr
+    ? ID_CRED_I:    bstr,
 ]
 ~~~~~~~~~~~
 
@@ -606,24 +589,28 @@ where
 
 * SS is the selected cipher suite used in the EDHOC session between U and V
 * G_U is the ephemeral public key (G_X) of U
-* Voucher_Info is as extracted from the EAD_1 field of message_1
-* H_handshake is the hash of message_1. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
-* opaque_state is OPTIONAL and represents the serialized and encrypted opaque state needed by V to statelessly respond to U after the reception of Voucher_Response.
+* Voucher_Info is as extracted from the EAD_3 field of message_3
+* H_handshake is the hash of message_3 (H_message_3). It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
+* ID_CRED_I is the identifier of U extracted from message_3. This field is only needed when V wants to ask W to provide a CRED_U during voucher response.
 
 #### Processing in W
 
 W receives and parses the voucher request received over the secure connection with V.
 W extracts from Voucher_Request:
 
-* SS - the selected cipher suite, which is the (last) integer of SUITES_I.
+* SS - the selected cipher suite.
 * G_U - the ephemeral public key of U.
 * ENC_U_INFO - the encryption of the device identifier ID_U, contained in the Voucher_Info field of Voucher_Request.
-* H_handshake - the hash of message_1.
+* H_handshake - the hash of message_3.
+* ID_CRED_I - an optional identifier for CRED_U.
+
+If ID_CRED_I is present, W retrieves the corresponding CRED_U to be sent in the voucher response, see {{voucher_response}}.
+If no matching CRED_U is found, the protocol SHALL be aborted with a generic error code, see {{rest-voucher-request}}.
 
 W verifies and decrypts ENC_U_INFO using the relevant algorithms of the selected cipher suite SS (see {{reuse}}), and obtains ID_U.
 
 W uses H_handshake as a session identifier, and associates it to the device identifier ID_U.
-Note that message_1 contains a unique ephemeral key, therefore H_handshake is expected to be unique.
+Note that G_U is a unique ephemeral key, therefore H_handshake is expected to be unique.
 
 If processing fails up until this point, the protocol SHALL be aborted with an error code signaling a generic issue with the request, see {{rest-voucher-request}}.
 
@@ -637,27 +624,27 @@ If ID_U is known by W, but authorization fails, the protocol SHALL be aborted wi
 
 In case a Voucher is needed (as determined by the application), W retrieves CRED_V associated with the secure connection with V, and constructs the Voucher for the device with identifier ID_U (see {{voucher}}).
 
-W generates the voucher response and sends it to V over the secure connection. The Voucher_Response SHALL be a CBOR array as defined below:
+W generates the voucher response and sends it to V over the secure connection.
+The Voucher_Response SHALL be a CBOR array as defined below:
 
 ~~~~~~~~~~~ cddl
 Voucher_Response = [
-    ? Voucher:        bstr,
-    ? opaque_state: bstr
+    Voucher:        bstr,
+    ? CRED_U:       bstr,
 ]
 ~~~~~~~~~~~
 
 where
 
-* The Voucher is defined in {{voucher}}, if present.
-* opaque_state is the echoed byte string opaque_state from Voucher_Request, if present.
+* The Voucher is defined in {{voucher}}.
+* CRED_U is an optional field corresponding to the credential of U, extracted according to the ID_CRED_I field passed in the voucher request.
 
 W signals the successful processing of Voucher_Request via a status code in the REST interface, as defined in {{rest-voucher-request}}.
 
 #### Processing in V
 
 V receives the voucher response from W over the secure connection.
-If present, V decrypts and verifies opaque_state as received from W. If that verification fails, then the EDHOC session with U is aborted.
-If the voucher response is successfully received from W, then V responds to U with EDHOC message_2 as described in {{V_2}}.
+If the voucher response is successfully received from W, then V responds to U with EDHOC message_4 as described in {{V_4}}.
 
 ## Error Handling {#err-handling}
 This section specifies a new EDHOC error code and how it is used in ELA.
@@ -727,7 +714,7 @@ where
 * OPAQUE_INFO is an opaque field that contains actionable information about the error.
   It may contain, for example, a list of suggested Vs through which U should join instead.
 
-* H_handshake is the hash of EDHOC message_1, calculated from the associated voucher request, see {{voucher_request}}.
+* H_handshake is the hash of EDHOC message_3, calculated from the associated voucher request, see {{voucher_request}}.
 
 ## Reverse flow with U as Responder {#reverse-u-responder}
 
@@ -786,7 +773,6 @@ Here is a summary of the changes needed in the ELA reverse flow:
 * The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
 * The Voucher_Request carries G_Y instead of G_X, and the transcript hash TH_2 instead of the hash H_message_1.
-* Stateless operation of V (see {{stateless-v}}) is not supported
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
@@ -1350,26 +1336,6 @@ The authenticator playing the role of the {{RFC9031}} JRC obtains the device ide
 
 Flight 4 is the OSCORE response carrying CoJP response message.
 The message is processed as specified in {{Section 8.4.2 of RFC9031}}.
-
-# Example of opaque_state
-
-As per {{stateless-v}}, V may act statelessly and transmit a opaque_state to W during the VREQ call.
-The example below contains an IPv4 address, a port number, and a timestamp, serialized as CBOR:
-
-~~~
-83             # array(3)
-   84          # array(4)
-      18 C0    # unsigned(192)
-      18 A8    # unsigned(168)
-      00       # unsigned(0)
-      05       # unsigned(5)
-   19 5A18     # unsigned(23064)
-   1A 6867EEE4 # unsigned(1751641828)
-~~~
-
-The above plaintext state can be encrypted using COSE.
-Speficially, it is useful that the plaintext is not only encrypted but also authenticated.
-That can be achieved using COSE_Encrypt0 using an AEAD algorithm.
 
 # Examples of protocol execution
 This section presents high level examples of the protocol execution.
