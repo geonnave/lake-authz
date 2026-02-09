@@ -290,9 +290,27 @@ U                              V                                       W
                           CORE PROTOCOL
 
 |                              |                                       |
+|                              |                                       |
 |         EDHOC message_1      |                                       |
 +----------------------------->|                                       |
-|  (EAD_1 = LOC_W, ENC_U_INFO) |                                       |
+|                              |                                       |
+|         EDHOC message_2      |                                       |
+|<-----------------------------+                                       |
+|                              |                                       |
+|                              |                                       |
+|         EDHOC message_3      |                                       |
++----------------------------->|                                       |
+|  (EAD_3 = LOC_W)             |                                       |
+|                              |                                       |
+|                              |                      Credential       |
+|                              |                        Database       |
+|                              |                               |       |
+|                              |   ID_CRED_I from message_3    |       |
+|                              +-  ---  ---   ---  ---  ---  ->|       |
+|                              |                               |       |
+|                              |             CRED_U            |       |
+|                              |<-  ---  ---  ---   ---  ---  -+       |
+|                              |                                       |
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
@@ -302,28 +320,10 @@ U                              V                                       W
 |                              |<--------------------------------------+
 |                              |  (message_1, Voucher, ?opaque_state)  |
 |                              |                                       |
-|         EDHOC message_2      |                                       |
+|         EDHOC message_4      |                                       |
 |<-----------------------------+                                       |
-|        (EAD_2 = Voucher)     |                                       |
-|                              |                                       |
-|                              |                                       |
-|         EDHOC message_3      |                                       |
-+----------------------------->|                                       |
-|                              |                                       |
+|        (EAD_4 = Voucher)     |                                       |
 
-------------------------------------------------------------------------
-
-|                              |
-|                              |                              Credential
-|                              |                                Database
-|                              |                                       |
-|                              |       ID_CRED_I from message_3        |
-|                              +---  ---  ---  ---   ---  ---  ---  -->|
-|                              |                                       |
-|                              |                 CRED_U                |
-|                              |<--  ---  ---  ---  ---   ---  ---  ---+
-|                              |                                       |
-|                              |                                       |
 ~~~~~~~~~~~
 {: #fig-protocol title="Overview of ELA: W-assisted authorization of U and V to each other: EDHOC between U and V, and Voucher Request/Response between V and W. Before the protocol, V and W are assumed to have established a secure channel and performed proof-of-possession of relevant keys. Credential lookup of CRED_U may involve W or other credential database." artwork-align="center"}
 
