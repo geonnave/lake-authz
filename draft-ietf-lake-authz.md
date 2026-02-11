@@ -372,26 +372,6 @@ info = (
 ~~~~~~~~~~
 
 
-## Stateless Operation of V {#stateless-v}
-
-V may act statelessly with respect to U: the state of the EDHOC session started by U may be dropped at V until authorization from W is received.
-Once V has received EDHOC message_1 from U and extracted LOC_W from EAD_1, message_1 is forwarded unmodified to W in the form of a Voucher Request (see {{voucher_request}}).
-V encapsulates the internal state that it needs to later respond to U, and sends that to W together with EDHOC message_1.
-This state typically contains addressing information of U (e.g., U's IP address and port number), together with any other implementation-specific parameter needed by V to respond to U.
-At this point, V can drop the EDHOC session that was initiated by U.
-
-The encapsulated state MUST be protected using a uniformly-distributed (pseudo-)random key, known only to itself and specific for the current EDHOC session to prevent replay attacks of old encapsulated state.
-
-How V serializes and encrypts its internal state is out of scope in this specification.
-For example, V may use CBOR and COSE.
-
-W sends to V the voucher together with the echoed message_1, as received from U, and V's internal state, see {{voucher_response}}.
-This allows V to act as a simple message relay until it has obtained the authorization from W to enroll U.
-The reception of a successful Voucher Response at V from W implies the authorization for V to enroll U.
-At this point, V can initialize a new EDHOC session with U, based on the message and the state retrieved from the Voucher Response from W.
-
-Noet that while stateless operation is supported in the default flow, it is not supported in the reverse flow (see {{reverse-u-responder}}).
-
 ## Device <-> Enrollment Server (U <-> W) {#U-W}
 
 The protocol between U and W is carried between U and V in message_1 and message_2 ({{U-V}}), and between V and W in the Voucher Request/Response ({{V-W}}). The data is protected between the endpoints using secret keys derived from a Diffie-Hellman shared secret (see {{reuse}}) as further detailed in this section.
@@ -591,7 +571,6 @@ Voucher_Request = [
     G_U:            bstr,
     Voucher_Info:   bstr,
     H_handshake:    bstr,
-    ? opaque_state: bstr
 ]
 ~~~~~~~~~~~
 
@@ -601,7 +580,6 @@ where
 * G_U is the ephemeral public key (G_X) of U
 * Voucher_Info is as extracted from the EAD_1 field of message_1
 * H_handshake is the hash of message_1. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
-* opaque_state is OPTIONAL and represents the serialized and encrypted opaque state needed by V to statelessly respond to U after the reception of Voucher_Response.
 
 #### Processing in W
 
@@ -780,7 +758,6 @@ Here is a summary of the changes needed in the ELA reverse flow:
 * The EAD_2 and EAD_3 fields carry EAD items identified with labels TBD1 and TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
 * The Voucher_Request carries G_Y instead of G_X, and the transcript hash TH_2 instead of the hash H_message_1.
-* Stateless operation of V (see {{stateless-v}}) is not supported
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                  +-----------+
@@ -1344,26 +1321,6 @@ The authenticator playing the role of the {{RFC9031}} JRC obtains the device ide
 
 Flight 4 is the OSCORE response carrying CoJP response message.
 The message is processed as specified in {{Section 8.4.2 of RFC9031}}.
-
-# Example of opaque_state
-
-As per {{stateless-v}}, V may act statelessly and transmit a opaque_state to W during the VREQ call.
-The example below contains an IPv4 address, a port number, and a timestamp, serialized as CBOR:
-
-~~~
-83             # array(3)
-   84          # array(4)
-      18 C0    # unsigned(192)
-      18 A8    # unsigned(168)
-      00       # unsigned(0)
-      05       # unsigned(5)
-   19 5A18     # unsigned(23064)
-   1A 6867EEE4 # unsigned(1751641828)
-~~~
-
-The above plaintext state can be encrypted using COSE.
-Speficially, it is useful that the plaintext is not only encrypted but also authenticated.
-That can be achieved using COSE_Encrypt0 using an AEAD algorithm.
 
 # Examples of protocol execution
 This section presents high level examples of the protocol execution.
