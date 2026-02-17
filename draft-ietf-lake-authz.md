@@ -307,11 +307,12 @@ U                              V                                       W
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
-|                              |      (SS, G_X, ENC_U_INFO, TH_3)      |
+|                              |        (SS, G_X, ENC_U_INFO,          |
+|                              |          TH_3, ?ID_CRED_I)            |
 |                              |                                       |
 |                              |        Voucher Response (VRES)        |
 |                              |<--------------------------------------+
-|                              |          (Voucher, ?CRED_I)           |
+|                              |          (Voucher, ?CRED_U)           |
 |                              |                                       |
 |         EDHOC message_4      |                                       |
 |<-----------------------------+                                       |
