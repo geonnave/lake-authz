@@ -218,7 +218,9 @@ V may be able to access credentials over non-constrained networks, but U may be 
 
 To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3 or be provisioned to V over a non-constrained network, leveraging a credential identifier in ID_CRED_I (see bottom of {{fig-protocol}}).
 
-U also needs to identify itself to W. The device identifier used for this is ID_U. The purpose of ID_U is for W to be able to determine if the device with this identifier is authorized to enroll with V. ID_U may be a reference to CRED_U, like ID_CRED_I in EDHOC (see {{Section 3.5.2 of RFC9528}}), or a device identifier from a different name space, such as EUI-64 identifiers.
+U also needs to identify itself to W, for which it reuses ID_CRED_I.
+This means that the value used by U in ID_CRED_I needs to be unique enough to be understood by both V and W.
+W will use ID_CRED_I to determine if the device with this identifier is authorized to enroll with V.
 
 U is also provisioned with information about W:
 
@@ -303,12 +305,11 @@ U                              V                                       W
 |                              |                                       |
 |         EDHOC message_3      |                                       |
 +----------------------------->|                                       |
-| (EAD_3 = LOC_W, ENC_U_INFO)  |                                       |
+|         (EAD_3 = LOC_W)      |                                       |
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
-|                              |        (SS, G_X, ENC_U_INFO,          |
-|                              |          TH_3, ?ID_CRED_I)            |
+|                              |   (ID_CRED_I, SS, G_X, H_message_3)   |
 |                              |                                       |
 |                              |        Voucher Response (VRES)        |
 |                              |<--------------------------------------+
@@ -333,7 +334,7 @@ In case U acts as Responder (see {{reverse-u-responder}}), G_Y is used instead.
 
 * SUITES_I includes the cipher suite for EDHOC selected by U, and also defines the algorithms used between U and W (see {{Section 3.6 of RFC9528}}):
 
-    * EDHOC AEAD algorithm: used to encrypt ID_U and to generate voucher
+    * EDHOC AEAD algorithm: used to generate voucher
     * EDHOC hash algorithm: used for key derivation
     * EDHOC key exchange algorithm: used to calculate the shared secret between U and W
 
@@ -380,55 +381,12 @@ Voucher_Info = bstr .cborseq Voucher_Info_Seq
 
 Voucher_Info_Seq = [ ; used as a CBOR sequence, not array
     LOC_W:      tstr,
-    ENC_U_INFO:     bstr
 ]
 ~~~~~~~~~~~
 
 where
 
 * LOC_W is a text string used by V to locate W, e.g., a URI or a domain name.
-* ENC_U_INFO is a byte string containing an encrypted identifier of U and, optionally, opaque application data prepared by U. It is calculated as follows:
-
-ENC_U_INFO is encrypted using the EDHOC AEAD algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
-It consists of 'ciphertext' of COSE_Encrypt0 ({{Section 5.2 of RFC9052}}) computed from the following:
-
-* The encryption key K_1 and nonce IV_1 are derived as specified below.
-* 'protected' is a byte string of size 0
-* 'plaintext' and 'external_aad' as below:
-
-~~~~~~~~~~~ cddl
-plaintext = (
-    ID_U:            bstr,
-)
-~~~~~~~~~~~
-~~~~~~~~~~~ cddl
-external_aad = [ ; used as a CBOR sequence, not array
-    TH_2:               bstr,
-    ID_CRED_R:          bstr,
-]
-~~~~~~~~~~~
-
-where
-
-* ID_U is an identifier of the device, see {{device}}.
-
-* TH_2 is the transcript hash received in EDHOC message_2.
-
-* ID_CRED_R is the credential identifier of V received in EDHOC message_2.
-
-The external_aad is wrapped in an enc_structure as defined in {{Section 5.3 of RFC9052}}.
-
-The derivation of K_1 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see OKM in {{reuse}}):
-
-* info_label = 0
-* context  = h'' (the empty CBOR string)
-* length is length of the key of the EDHOC AEAD algorithm in bytes (which is the length of K_1)
-
-The derivation of IV_1 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see OKM in {{reuse}}):
-
-* info_label = 1
-* context = h''  (the empty CBOR string)
-* length is length of the nonce of the EDHOC AEAD algorithm in bytes (which is the length of IV_1)
 
 ### Voucher {#voucher}
 
@@ -445,7 +403,7 @@ Voucher = bstr
 Its corresponding plaintext value consists of an opaque field that can be used by W to convey information to U, such as a voucher scope.
 The authentication tag present in the ciphertext is also bound to message_3 and the credential of V as described below.
 
-* The encryption key K_2 and nonce IV_2 are derived as specified below.
+* The encryption key K_1 and nonce IV_1 are derived as specified below.
 * 'protected' is a byte string of size 0
 * 'plaintext' and 'external_aad' as below:
 
@@ -472,13 +430,13 @@ It is opaque to V, while the application in U and W can read its contents.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
-The derivation of K_2 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
+The derivation of K_1 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
 
 * info_label = 2
 * context  = h'' (the empty CBOR string)
 * length is length of the key of the EDHOC AEAD algorithm in bytes
 
-The derivation of IV_2 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
+The derivation of IV_1 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
 
 * info_label = 3
 * context = h''  (the empty CBOR string)
@@ -518,7 +476,6 @@ ID_CRED_R contains the CWT Claims Set with 'kccs' as COSE header_map, see {{Sect
 #### Processing in U
 
 U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}.
-The device obtains the transcript hash TH_2 and the credential identifier ID_CRED_R, used to prepare Voucher_Info as detailed in {{voucher_info}}.
 
 ### Message 3
 
@@ -541,8 +498,7 @@ It is up to the application to decide whether to verify the credential of U befo
 
 In case V has access to a credential database, it MAY query it with ID_CRED_I to obtain a corresponding CRED_U and verify the identity of U before making the Voucher request to W.
 
-Alternatively, V MAY include ID_CRED_I as part of the voucher request sent to W.
-In this case, a valid Voucher response from W will contain a corresponding CRED_U, see {{V-W}}.
+Alternatively, V MAY wait for the voucher response, and if it contains CRED_U, TODO.
 V MUST verify the credential of U using the CRED_U received from W.
 
 Even upon reception of a valid Voucher from W, if the verification of CRED_U fails, the EDHOC session is aborted.
@@ -578,52 +534,47 @@ The Voucher Request SHALL be a CBOR array as defined below:
 
 ~~~~~~~~~~~ cddl
 Voucher_Request = [
+    ID_CRED_I:    bstr,
     SS:             int,
     G_U:            bstr,
-    Voucher_Info:   bstr,
     H_handshake:    bstr,
-    ? ID_CRED_I:    bstr,
 ]
 ~~~~~~~~~~~
 
 where
 
+* ID_CRED_I is the identifier of U extracted from message_3, from which CRED_U can be obtained
 * SS is the selected cipher suite used in the EDHOC session between U and V
 * G_U is the ephemeral public key (G_X) of U
-* Voucher_Info is as extracted from the EAD_3 field of message_3
 * H_handshake is the hash of message_3 (H_message_3). It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
-* ID_CRED_I is the identifier of U extracted from message_3. This field is only needed when V wants to ask W to provide a CRED_U during voucher response.
 
 #### Processing in W
 
 W receives and parses the voucher request received over the secure connection with V.
 W extracts from Voucher_Request:
 
+* ID_CRED_I - an optional identifier for CRED_U.
 * SS - the selected cipher suite.
 * G_U - the ephemeral public key of U.
-* ENC_U_INFO - the encryption of the device identifier ID_U, contained in the Voucher_Info field of Voucher_Request.
 * H_handshake - the hash of message_3.
-* ID_CRED_I - an optional identifier for CRED_U.
 
-If ID_CRED_I is present, W retrieves the corresponding CRED_U to be sent in the voucher response, see {{voucher_response}}.
-If no matching CRED_U is found, the protocol SHALL be aborted with a generic error code, see {{rest-voucher-request}}.
+W uses ID_CRED_I to retrieve the corresponding CRED_U to be sent in the voucher response, see {{voucher_response}}.
+If no matching CRED_U is found, the protocol SHALL be aborted with a generic error code, see {{rest-voucher-request}} (TODO: True?)
 
-W verifies and decrypts ENC_U_INFO using the relevant algorithms of the selected cipher suite SS (see {{reuse}}), and obtains ID_U.
-
-W uses H_handshake as a session identifier, and associates it to the device identifier ID_U.
+W uses H_handshake as a session identifier, and associates it to the device identifier ID_CRED_I.
 Note that G_U is a unique ephemeral key, therefore H_handshake is expected to be unique.
 
 If processing fails up until this point, the protocol SHALL be aborted with an error code signaling a generic issue with the request, see {{rest-voucher-request}}.
 
-W uses ID_U to look up the associated authorization policies for U and enforces them. This is out of scope for the specification.
+W uses ID_CRED_I to look up the associated authorization policies for U and enforces them. This is out of scope for the specification.
 
-If ID_U is known by W, but authorization fails, the protocol SHALL be aborted with an error code signaling an access control issue, see {{err-handling}} and {{rest-voucher-request}}.
+If ID_CRED_I is known by W, but authorization fails, the protocol SHALL be aborted with an error code signaling an access control issue, see {{err-handling}} and {{rest-voucher-request}}.
 
 ### Voucher Response {#voucher_response}
 
 #### Processing in W
 
-In case a Voucher is needed (as determined by the application), W retrieves CRED_V associated with the secure connection with V, and constructs the Voucher for the device with identifier ID_U (see {{voucher}}).
+In case a Voucher is needed (as determined by the application), W retrieves CRED_V associated with the secure connection with V, and constructs the Voucher for the device with identifier ID_CRED_I (see {{voucher}}).
 
 W generates the voucher response and sends it to V over the secure connection.
 The Voucher_Response SHALL be a CBOR array as defined below:
@@ -718,6 +669,8 @@ where
 * H_handshake is the hash of EDHOC message_3, calculated from the associated voucher request, see {{voucher_request}}.
 
 ## Reverse flow with U as Responder {#reverse-u-responder}
+
+TODO(fix this section with new ID_CRED_I-based solution)
 
 This section presents a protocol variant in which U is the EDHOC Responder.
 This may allow optimizations in certain constrained network technologies.
@@ -931,8 +884,8 @@ In case of successful processing at W, W MUST issue a response such that:
 
 In case of error, two cases should be considered:
 
-* U cannot be identified: this happens either if W fails to process the Voucher Request, or if it succeeds but ID_U is considered unknown to W. In this case, W MUST reply with 400 Bad Request if using HTTP, or 4.00 if using CoAP.
-* U is identified but unauthorized: this happens if W is able to process the Voucher Request, and W recognizes ID_U as a known device, but the access policies forbid enrollment. For example, the policy could enforce enrollment within a delimited time window, via a specific V, etc. In this case, W MUST reply with a 403 Forbidden code if using HTTP, or 4.03 if using CoAP; the payload is the serialized error_content object, with Content-Format (Content-Type) set to "application/lake-authz-vouchererror+cbor". The payload MAY be used by V to prepare an EDHOC error "Access Denied", see {{err-handling}}.
+* U cannot be identified: this happens either if W fails to process the Voucher Request, or if it succeeds but ID_CRED_I is considered unknown to W. In this case, W MUST reply with 400 Bad Request if using HTTP, or 4.00 if using CoAP.
+* U is identified but unauthorized: this happens if W is able to process the Voucher Request, and W recognizes ID_CRED_I as a known device, but the access policies forbid enrollment. For example, the policy could enforce enrollment within a delimited time window, via a specific V, etc. In this case, W MUST reply with a 403 Forbidden code if using HTTP, or 4.03 if using CoAP; the payload is the serialized error_content object, with Content-Format (Content-Type) set to "application/lake-authz-vouchererror+cbor". The payload MAY be used by V to prepare an EDHOC error "Access Denied", see {{err-handling}}.
 
 ### Certificate Request (/certrequest)
 
@@ -953,12 +906,18 @@ In case of a successful lookup of the authentication credential at W, W MUST iss
 
 This specification builds on and reuses many of the security constructions of EDHOC, e.g., shared secret calculation and key derivation. The security considerations of EDHOC {{RFC9528}} apply with modifications discussed here.
 
-EDHOC provides identity protection of the Initiator, here the device. The encryption of the device identifier ID_U in the first message should consider potential information leaking from the length of ID_U, either by making all identifiers having the same length or the use of a padding scheme.
+EDHOC provides identity protection of the Initiator, here the device.
+In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with W.
 
-Although W learns about the identity of U after receiving VREQ, this information must not be disclosed to V, until U has revealed its identity to V with ID_CRED_I in message_3. W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{fig-protocol}}. The trust model used here is that U decides to which V it reveals its identity. In an alternative trust model where U trusts W to decide to which V it reveals U's identity, CRED_U could be sent in Voucher Response.
+Although W learns about the identity of U after receiving VREQ, this information must not be disclosed to V, until U has revealed its identity to V with ID_CRED_I in message_3.
+W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{fig-protocol}}.
+FIXME(trust model changes, since now ID_CRED_I is always revealed to V).
+The trust model used here is that U decides to which V it reveals its identity.
+In an alternative trust model where U trusts W to decide to which V it reveals U's identity, CRED_U could be sent in Voucher Response.
 
  As noted in {{Section 9.2 of RFC9528}} an ephemeral key may be used to calculate several ECDH shared secrets. In this specification, the ephemeral key G_X is also used to calculate G_XW, the shared secret with the enrollment server.
 
+FIXME(just remove this paragraph?).
 The private ephemeral key is thus used in the device for calculations of key material relating to both the authenticator and the enrollment server. There are different options for where to implement these calculations. One option is as an addition to EDHOC, i.e., to extend the EDHOC API in the device, so that EDHOC can import the public key of W (G_W) and the device identifier of U (ID_U), and then produce the encryption of ID_U which is included in Voucher_Info in EAD_1.
 
 # IANA Considerations  {#iana}
