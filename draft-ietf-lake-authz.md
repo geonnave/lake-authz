@@ -497,11 +497,13 @@ As part of normal processing of EDHOC message_3, V must verify the credential of
 It is up to the application to decide whether to verify the credential of U before or after the voucher request to W, see pre and post -verification processing of EAD items in {{I-D.ietf-lake-edhoc-impl-cons}}.
 
 In case V has access to a credential database, it MAY query it with ID_CRED_I to obtain a corresponding CRED_U and verify the identity of U before making the Voucher request to W.
+If the verification of CRED_U fails, the EDHOC session is aborted.
+In this scenario, the EAD item in EAD_3 is processed as a post-verification item {{I-D.ietf-lake-edhoc-impl-cons}}.
 
-Alternatively, V MAY wait for the voucher response, and if it contains CRED_U, TODO.
-V MUST verify the credential of U using the CRED_U received from W.
-
+Alternatively, V MAY proceed and perform a voucher request and wait for a voucher response.
+If the response contains CRED_U, V then continues processing EDHOC message_3 where it verifies the credential of U.
 Even upon reception of a valid Voucher from W, if the verification of CRED_U fails, the EDHOC session is aborted.
+In this scenario, the EAD item in EAD_3 is processed as a pre-verification item {{I-D.ietf-lake-edhoc-impl-cons}}.
 
 ### Message 4 {#m4}
 
