@@ -560,9 +560,6 @@ W extracts from Voucher_Request:
 * G_U - the ephemeral public key of U.
 * H_handshake - the hash of message_3.
 
-W uses ID_CRED_I to retrieve the corresponding CRED_U to be sent in the voucher response, see {{voucher_response}}.
-If no matching CRED_U is found, the protocol SHALL be aborted with a generic error code, see {{rest-voucher-request}} (TODO: True?)
-
 W uses H_handshake as a session identifier, and associates it to the device identifier ID_CRED_I.
 Note that G_U is a unique ephemeral key, therefore H_handshake is expected to be unique.
 
@@ -571,6 +568,8 @@ If processing fails up until this point, the protocol SHALL be aborted with an e
 W uses ID_CRED_I to look up the associated authorization policies for U and enforces them. This is out of scope for the specification.
 
 If ID_CRED_I is known by W, but authorization fails, the protocol SHALL be aborted with an error code signaling an access control issue, see {{err-handling}} and {{rest-voucher-request}}.
+
+W MAY use ID_CRED_I to retrieve the corresponding CRED_U to be sent in the voucher response, see {{voucher_response}}.
 
 ### Voucher Response {#voucher_response}
 
