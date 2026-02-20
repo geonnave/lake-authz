@@ -374,7 +374,7 @@ The protocol between U and W is carried between U and V in message_3 and message
 
 ### Voucher Info {#voucher_info}
 
-The external authorization data EAD_1 contains a critical EAD item with ead_label = -TBD1 and ead_value = Voucher_Info, which is a CBOR byte string:
+The external authorization data EAD_3 contains a critical EAD item with ead_label = -TBD1 and ead_value = Voucher_Info, which is a CBOR byte string:
 
 ~~~~~~~~~~~ cddl
 Voucher_Info = bstr .cborseq Voucher_Info_Seq
@@ -390,7 +390,7 @@ where
 
 ### Voucher {#voucher}
 
-The external authorization data EAD_4 contains an EAD item with ead_label = TBD2 and ead_value = Voucher.
+The external authorization data EAD_4 contains an EAD item with ead_label = -TBD2 and ead_value = Voucher.
 
 The voucher is an assertion to U that W has authorized V.
 It is encrypted using the EDHOC AEAD algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
@@ -490,7 +490,7 @@ EDHOC message_3 may be combined with an OSCORE-protected application request, se
 
 V receives EDHOC message_3 from U and processes it as specified in {{Section 5.4.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_3.
 Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
-Otherwise, the ead_label = TBD1 triggers the voucher request to W as described in {{V-W}}.
+The ead_label = TBD1 triggers the voucher request to W as described in {{V-W}}.
 The exchange between V and W needs to be completed successfully for the EDHOC session to be continued.
 
 As part of normal processing of EDHOC message_3, V must verify the credential of U.
@@ -511,7 +511,7 @@ In this scenario, the EAD item in EAD_3 is processed as a pre-verification item 
 
 At this point, V has authenticated U, and received a valid voucher response from W as described in {{V-W}}.
 
-V sends EDHOC message_4 to U with the critical EAD item (-TBD2, Voucher) included in EAD_4, i.e., ead_label = TBD2 and ead_value = Voucher, as specified in {{voucher}}.
+V sends EDHOC message_4 to U with the critical EAD item (-TBD2, Voucher) included in EAD_4, i.e., ead_label = -TBD2 and ead_value = Voucher, as specified in {{voucher}}.
 
 #### Processing in U
 
