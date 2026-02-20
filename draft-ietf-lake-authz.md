@@ -370,7 +370,7 @@ info = (
 
 ## Device <-> Enrollment Server (U <-> W) {#U-W}
 
-The protocol between U and W is carried between U and V in message_3 and message_4 ({{U-V}}), and between V and W in the Voucher Request/Response ({{V-W}}). The data is protected between the endpoints using secret keys derived from a Diffie-Hellman shared secret (see {{reuse}}) as further detailed in this section.
+The protocol between U and W is carried between U and V in message_3 and message_4 ({{U-V}}), and between V and W in the Voucher Request/Response ({{V-W}}). The data is protected between the endpoints using secret keys derived from a shared secret (see {{reuse}}) as further detailed in this section.
 
 ### Voucher Info {#voucher_info}
 
@@ -451,7 +451,7 @@ This section describes the processing in U and V, which includes the EDHOC proto
 #### Processing in U
 
 U composes EDHOC message_1 using authentication method, identifiers, etc. according to an agreed application profile, see {{Section 3.9 of RFC9528}}.
-The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the Diffie-Hellman key agreement algorithm used between U and W.
+The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the key agreement algorithm used between U and W.
 As part of the normal EDHOC processing, U generates the ephemeral public key G_X that is reused in the interaction with W, see {{U-W}}.
 U sends EDHOC message_1 to V.
 
