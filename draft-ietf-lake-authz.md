@@ -309,7 +309,7 @@ U                              V                                       W
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
-|                              |   (ID_CRED_I, SS, G_X, H_message_3)   |
+|                              |   (SS, G_X, H_message_3, ID_CRED_I)   |
 |                              |                                       |
 |                              |        Voucher Response (VRES)        |
 |                              |<--------------------------------------+
@@ -403,7 +403,7 @@ Voucher = bstr
 Its corresponding plaintext value consists of an opaque field that can be used by W to convey information to U, such as a voucher scope.
 The authentication tag present in the ciphertext is also bound to message_3 and the credential of V as described below.
 
-* The encryption key K_1 and nonce IV_1 are derived as specified below.
+* The encryption key K and nonce IV are derived as specified below.
 * 'protected' is a byte string of size 0
 * 'plaintext' and 'external_aad' as below:
 
@@ -430,13 +430,13 @@ It is opaque to V, while the application in U and W can read its contents.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
-The derivation of K_1 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
+The derivation of K = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
 
 * info_label = 2
 * context  = h'' (the empty CBOR string)
 * length is length of the key of the EDHOC AEAD algorithm in bytes
 
-The derivation of IV_1 = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
+The derivation of IV = EDHOC_Expand(PRK, info, length) uses the following input to the info struct (see {{reuse}}):
 
 * info_label = 3
 * context = h''  (the empty CBOR string)
@@ -459,7 +459,7 @@ U sends EDHOC message_1 to V.
 
 V processes EDHOC message_1 as specified in {{RFC9528}}.
 
-Note that as part of normal EDHOC processing, U and V may negotiate a selected cipher suite SS, as specified in {{Section 6.3.1 of RFC9528}}.
+Note that as part of normal EDHOC processing, U and V negotiate a selected cipher suite SS, as specified in {{Section 6.3.1 of RFC9528}}.
 
 ### Message 2 {#m2}
 
