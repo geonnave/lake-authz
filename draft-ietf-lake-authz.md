@@ -309,7 +309,8 @@ U                              V                                       W
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
-|                              |   (SS, G_X, H_message_3, ID_CRED_I)   |
+|                              |        (SS, G_X, H_message_3          |
+|                              |       ID_CRED_I, Fetch_CRED_U)        |
 |                              |                                       |
 |                              |        Voucher Response (VRES)        |
 |                              |<--------------------------------------+
@@ -536,29 +537,34 @@ The Voucher Request SHALL be a CBOR array as defined below:
 
 ~~~~~~~~~~~ cddl
 Voucher_Request = [
-    ID_CRED_I:    bstr,
     SS:             int,
     G_U:            bstr,
     H_handshake:    bstr,
+    ID_CRED_I:      bstr,
+    Fetch_CRED_U    bool,
 ]
 ~~~~~~~~~~~
 
 where
 
-* ID_CRED_I is the identifier of U extracted from message_3, from which CRED_U can be obtained
-* SS is the selected cipher suite used in the EDHOC session between U and V
-* G_U is the ephemeral public key (G_X) of U
+* SS is the selected cipher suite used in the EDHOC session between U and V.
+* G_U is the ephemeral public key (G_X) of U.
 * H_handshake is the hash of message_3 (H_message_3). It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
+* ID_CRED_I is the identifier of U extracted from message_3.
+* Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
 
 #### Processing in W
 
 W receives and parses the voucher request received over the secure connection with V.
 W extracts from Voucher_Request:
 
-* ID_CRED_I - an optional identifier for CRED_U.
 * SS - the selected cipher suite.
 * G_U - the ephemeral public key of U.
 * H_handshake - the hash of message_3.
+* ID_CRED_I - an optional identifier of U.
+* Fetch_CRED_U - flag indicating whether V expects CRED_U in voucher response.
+
+W verifies that it supports the cipher suite and parses the key in G_U.
 
 W uses H_handshake as a session identifier, and associates it to the device identifier ID_CRED_I.
 Note that G_U is a unique ephemeral key, therefore H_handshake is expected to be unique.
@@ -569,7 +575,7 @@ W uses ID_CRED_I to look up the associated authorization policies for U and enfo
 
 If ID_CRED_I is known by W, but authorization fails, the protocol SHALL be aborted with an error code signaling an access control issue, see {{err-handling}} and {{rest-voucher-request}}.
 
-W MAY use ID_CRED_I to retrieve the corresponding CRED_U to be sent in the voucher response, see {{voucher_response}}.
+If Fetch_CRED_U is true, W uses ID_CRED_I to try to retrieve the corresponding credential that is optionally sent in the voucher response, see {{voucher_response}}.
 
 ### Voucher Response {#voucher_response}
 
@@ -590,7 +596,7 @@ Voucher_Response = [
 where
 
 * The Voucher is defined in {{voucher}}.
-* CRED_U is an optional field corresponding to the credential of U, extracted according to the ID_CRED_I field passed in the voucher request.
+* CRED_U is an optional field corresponding to the credential of U extracted according to the ID_CRED_I field passed in the voucher request. W only tries to load and return CRED_U if the flag Fetch_CRED_U was set in the voucher request.
 
 W signals the successful processing of Voucher_Request via a status code in the REST interface, as defined in {{rest-voucher-request}}.
 
