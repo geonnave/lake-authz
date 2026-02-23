@@ -216,7 +216,7 @@ V may be able to access credentials over non-constrained networks, but U may be 
 
 ## Device (U) {#device}
 
-To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3 or be provisioned to V over a non-constrained network, leveraging a credential identifier in ID_CRED_I (see bottom of {{fig-protocol}}).
+To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3 or be provisioned to V over a non-constrained network, leveraging a credential identifier in ID_CRED_I (see {{fig-protocol}}).
 
 U also needs to identify itself to W, for which it reuses ID_CRED_I.
 This means that the value used by U in ID_CRED_I needs to be unique enough to be understood by both V and W.
@@ -309,7 +309,7 @@ U                              V                                       W
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
-|                              |        (SS, G_X, H_message_3          |
+|                              |        (SS, G_X, H_handshake          |
 |                              |       ID_CRED_I, Fetch_CRED_U)        |
 |                              |                                       |
 |                              |        Voucher Response (VRES)        |
@@ -402,7 +402,7 @@ Voucher = bstr
 ~~~~~~~~~~~
 
 Its corresponding plaintext value consists of an opaque field that can be used by W to convey information to U, such as a voucher scope.
-The authentication tag present in the ciphertext is also bound to message_3 and the credential of V as described below.
+The authentication tag present in the ciphertext is also bound to the current EDHOC handshake, the identity of U, and the credential of V as described below.
 
 * The encryption key K and nonce IV are derived as specified below.
 * 'protected' is a byte string of size 0
@@ -416,7 +416,8 @@ plaintext = (
 ~~~~~~~~~~~ cddl
 external_aad = (
     H_handshake:  bstr,
-    CRED_V:        bstr,
+    ID_CRED_I:    bstr,
+    CRED_V:       bstr,
 )
 ~~~~~~~~~~~
 
@@ -427,7 +428,9 @@ If present, it will contain application data that W may want to convey to U, e.g
 Note that OPAQUE_INFO is opaque when viewed as an information element in EDHOC.
 It is opaque to V, while the application in U and W can read its contents.
 
-* H_handshake is the hash of EDHOC message_3, sent by V as part of the voucher request, see {{voucher_request}}.
+* H_handshake is H(message_2, message_1), used to bind the voucher to the current EDHOC session. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1. H_handshake is sent to W as part of the voucher request, see {{voucher_request}}.
+
+* ID_CRED_I is the identifier of U transmitted via the voucher request.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
@@ -519,7 +522,7 @@ V sends EDHOC message_4 to U with the critical EAD item (-TBD2, Voucher) include
 U receives EDHOC message_4 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_4.
 
 If U does not recognize the EAD item or the EAD item contains information that U cannot process, then U MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
-Otherwise, U MUST verify the Voucher using H_message_3, CRED_V, and the keys derived as in {{voucher}}. If the verification fails then U MUST abort the EDHOC session.
+Otherwise, U MUST verify the Voucher using H_handshake, ID_CRED_I, CRED_V, and the keys derived as in {{voucher}}. If the verification fails then U MUST abort the EDHOC session.
 
 If OPAQUE_INFO is present, it is made available to the application.
 
@@ -549,8 +552,7 @@ where
 
 * SS is the selected cipher suite used in the EDHOC session between U and V.
 * G_U is the ephemeral public key (G_X) of U.
-* H_handshake is the hash of message_3 (H_message_3). It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
-* ID_CRED_I is the identifier of U extracted from message_3.
+* H_handshake corresponds to H(message_2, message_1). It is computed as defined in {{voucher}}.
 * Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
 
 #### Processing in W
@@ -560,7 +562,7 @@ W extracts from Voucher_Request:
 
 * SS - the selected cipher suite.
 * G_U - the ephemeral public key of U.
-* H_handshake - the hash of message_3.
+* H_handshake - the hash of message_2 and message_1.
 * ID_CRED_I - an optional identifier of U.
 * Fetch_CRED_U - flag indicating whether V expects CRED_U in voucher response.
 
@@ -673,7 +675,7 @@ where
 * OPAQUE_INFO is an opaque field that contains actionable information about the error.
   It may contain, for example, a list of suggested Vs through which U should join instead.
 
-* H_handshake is the hash of EDHOC message_3, calculated from the associated voucher request, see {{voucher_request}}.
+* H_handshake is the hash of EDHOC message_2 and message_1, obtained from the associated voucher request, see {{voucher_request}}.
 
 ## Reverse flow with U as Responder {#reverse-u-responder}
 
@@ -733,7 +735,6 @@ Here is a summary of the changes needed in the ELA reverse flow:
 * Voucher_Info and Voucher are transported in EDHOC message_2 and message_3, respectively (instead of message_1 and message_2).
 * The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
-* The Voucher_Request carries G_Y instead of G_X, and the transcript hash TH_2 instead of the hash H_message_1.
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
@@ -780,10 +781,6 @@ Voucher Info:
 
 * The EAD_2 item has ead_label = -TBD1 and ead_value = Voucher_Info.
 
-Voucher:
-
-* H_handshake is the transcript hash TH_2, sent by V as part of the voucher request, see {{reverse-v-w}}.
-
 #### Reverse U <-> V {#reverse-u-v}
 
 Message 1:
@@ -811,7 +808,6 @@ Processing in V:
 * The Voucher_Request fields are prepared as defined in {{voucher_request}}, with the following changes:
   * G_U is set to G_Y, which is the ephemeral public key of U as extracted from message_2.
   * Voucher_Info is as extracted from the EAD_2 field of message_2.
-  * H_handshake is the transcript hash TH_2, computed by V as specified in {{Section 5.3.2 of RFC9528}}.
 
 Processing in W happens as specified in {{voucher_request}}.
 
