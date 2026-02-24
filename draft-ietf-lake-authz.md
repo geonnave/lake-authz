@@ -251,7 +251,7 @@ W will use ID_CRED_I to determine if the device with this identifier is authoriz
 
 U is also provisioned with information about W:
 
-* A static public key of W (G_W) used to establish secure communication with the enrollment server (see {{U-W}}).
+* A static public key of W (PK_W) used to establish secure communication with the enrollment server (see {{U-W}}).
 * Location information about the enrollment server (LOC_W) that can be used by V to reach W. This is typically a URI but may alternatively be only the domain name.
 
 ## Domain Authenticator (V) {#domain-auth}
@@ -281,7 +281,7 @@ Other details of proof-of-possession related to CRED_V and transport of CRED_V a
 
 ## Enrollment Server (W) {#authz-server}
 
-The enrollment server (W) is assumed to have the private key corresponding to G_W, which is used to establish secure communication with the device (see {{U-W}}).
+The enrollment server (W) is assumed to have the private key corresponding to PK_W, which is used to establish secure communication with the device (see {{U-W}}).
 W provides to U the authorization decision for enrollment with V in the form of a voucher (see {{voucher}}).
 Authorization policies are out of scope for this document.
 
@@ -381,8 +381,8 @@ The intermediate pseudo-random key PRK is derived using EDHOC_Extract():
   * PRK = EDHOC_Extract(salt, IKM)
     * where salt = 0x (the zero-length byte string)
     * Computation of IKM depends on the EDHOC method in use.
-      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, G_W, and the private key corresponding to G_U (or v.v.), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-V}}.
-      * If the method is based on a Key Encapsulation Mechanism (KEM), IKM is the shared secret resulting from encapsulating G_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
+      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or v.v.), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-V}}.
+      * If the method is based on a Key Encapsulation Mechanism (KEM), IKM is the shared secret resulting from encapsulating PK_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
 
 The output keying material OKM is derived from PRK using EDHOC_Expand(), which is defined in terms of the EDHOC hash algorithm of the selected cipher suite SS, see {{Section 4.1.2 of RFC9528}}:
 
