@@ -72,6 +72,32 @@ normative:
     title: Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography - NIST Special Publication 800-56A, Revision 3
     date: 2018-04
     target: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-56Ar3.pdf
+  NIST-800-227:
+    author:
+      -
+        ins: G. Alagic
+        name: Gorjan Alagic
+      -
+        ins: E. Barker
+        name: Elaine Barker
+      -
+        ins: L. Chen
+        name: Lily Chen
+      -
+        ins: D. Moody
+        name: Dustin Moody
+      -
+        ins: A. Robinson
+        name: Angela Robinson
+      -
+        ins: H. Silberg
+        name: Hamilton Silberg
+      -
+        ins: N. Waller
+        name: Noah Waller
+    title: Recommendations for Key-Encapsulation Mechanisms - NIST Special Publication 800-227
+    date: 2025-09
+    target: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-227.pdf
 
 informative:
 
@@ -89,6 +115,7 @@ informative:
   RFC8995:
   RFC9031:
   I-D.ietf-core-oscore-edhoc:
+  I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
   I-D.amsuess-core-coap-over-gatt:
   I-D.ietf-lake-edhoc-impl-cons:
@@ -195,7 +222,7 @@ V may be able to access credentials over non-constrained networks, but U may be 
 ~~~~~~~~~~~ aasvg
 
 
-         Explicit relation (e.g., from device manufacture)
+         Explicit relation (e.g., from device manufacturer)
      | <---------------------------------------------------> |
      |                                                       |
 +----+-----+            +---------------+            +-------+-------+
@@ -224,7 +251,7 @@ W will use ID_CRED_I to determine if the device with this identifier is authoriz
 
 U is also provisioned with information about W:
 
-* A static public DH key of W (G_W) used to establish secure communication with the enrollment server (see {{U-W}}).
+* A static public key of W (G_W) used to establish secure communication with the enrollment server (see {{U-W}}).
 * Location information about the enrollment server (LOC_W) that can be used by V to reach W. This is typically a URI but may alternatively be only the domain name.
 
 ## Domain Authenticator (V) {#domain-auth}
@@ -254,9 +281,12 @@ Other details of proof-of-possession related to CRED_V and transport of CRED_V a
 
 ## Enrollment Server (W) {#authz-server}
 
-The enrollment server (W) is assumed to have the private DH key corresponding to G_W, which is used to establish secure communication with the device (see {{U-W}}). W provides to U the authorization decision for enrollment with V in the form of a voucher (see {{voucher}}). Authorization policies are out of scope for this document.
+The enrollment server (W) is assumed to have the private key corresponding to G_W, which is used to establish secure communication with the device (see {{U-W}}).
+W provides to U the authorization decision for enrollment with V in the form of a voucher (see {{voucher}}).
+Authorization policies are out of scope for this document.
 
-Authentication credentials and communication security with V is described in {{domain-auth}}. To calculate the voucher, W needs access to message_1 and CRED_V as used in the EDHOC session between U and V, see {{voucher}}.
+Authentication credentials and communication security with V is described in {{domain-auth}}.
+To calculate the voucher, W needs access to H_handshake, ID_CRED_I, and CRED_V as used in the EDHOC session between U and V, see {{voucher}}.
 
 * W MUST verify that CRED_V is bound to the secure connection between W and V
 * W MUST verify that V is in possession of the private key corresponding to the public key of CRED_V
@@ -309,8 +339,8 @@ U                              V                                       W
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
-|                              |        (SS, G_X, H_handshake          |
-|                              |       ID_CRED_I, Fetch_CRED_U)        |
+|                              |       (SS, EK_CT, H_handshake         |
+|                              |        ID_CRED_I, Fetch_CRED_U)       |
 |                              |                                       |
 |                              |        Voucher Response (VRES)        |
 |                              |<--------------------------------------+
@@ -330,9 +360,6 @@ U                              V                                       W
 
 The ELA protocol illustrated in {{fig-protocol}} reuses several components of EDHOC:
 
-* G_X, the ephemeral public Diffie-Hellman key of U, is also used in the protocol between U and W.
-In case U acts as Responder (see {{reverse-u-responder}}), G_Y is used instead.
-
 * SUITES_I includes the cipher suite for EDHOC selected by U, and also defines the algorithms used between U and W (see {{Section 3.6 of RFC9528}}):
 
     * EDHOC AEAD algorithm: used to generate voucher
@@ -349,10 +376,13 @@ In case U is Responder, CRED_V is transported in ID_CRED_I in message_3.
 
 The protocol also reuses the EDHOC_Extract and EDHOC_Expand key derivation from EDHOC (see {{Section 4 of RFC9528}}).
 
-* The intermediate pseudo-random key PRK is derived using EDHOC_Extract():
-    * PRK = EDHOC_Extract(salt, IKM)
-         * where salt = 0x (the zero-length byte string)
-         * IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, G_W, and the private key corresponding to G_X (or v.v.), see Section 5.7.1.2 of {{NIST-800-56A}}.
+The intermediate pseudo-random key PRK is derived using EDHOC_Extract():
+
+  * PRK = EDHOC_Extract(salt, IKM)
+    * where salt = 0x (the zero-length byte string)
+    * Computation of IKM depends on the EDHOC method in use.
+      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, G_W, and the private key corresponding to G_U (or v.v.), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-V}}.
+      * If the method is based on a Key Encapsulation Mechanism (KEM), IKM is the shared secret resulting from encapsulating G_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
 
 The output keying material OKM is derived from PRK using EDHOC_Expand(), which is defined in terms of the EDHOC hash algorithm of the selected cipher suite SS, see {{Section 4.1.2 of RFC9528}}:
 
@@ -381,13 +411,17 @@ The external authorization data EAD_3 contains a critical EAD item with ead_labe
 Voucher_Info = bstr .cborseq Voucher_Info_Seq
 
 Voucher_Info_Seq = [ ; used as a CBOR sequence, not array
-    LOC_W:      tstr,
+    LOC_W: tstr,
+    EK_CT: bstr,
 ]
 ~~~~~~~~~~~
 
 where
 
 * LOC_W is a text string used by V to locate W, e.g., a URI or a domain name.
+* EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC method being used in the current session:
+  * if the method is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
+  * if the method is based on a PQC KEM, the device performs key encapsulation and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
 
 ### Voucher {#voucher}
 
@@ -456,7 +490,6 @@ This section describes the processing in U and V, which includes the EDHOC proto
 
 U composes EDHOC message_1 using authentication method, identifiers, etc. according to an agreed application profile, see {{Section 3.9 of RFC9528}}.
 The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the key agreement algorithm used between U and W.
-As part of the normal EDHOC processing, U generates the ephemeral public key G_X that is reused in the interaction with W, see {{U-W}}.
 U sends EDHOC message_1 to V.
 
 #### Processing in V
@@ -541,7 +574,7 @@ The Voucher Request SHALL be a CBOR array as defined below:
 ~~~~~~~~~~~ cddl
 Voucher_Request = [
     SS:             int,
-    G_U:            bstr,
+    EK_CT:          bstr,
     H_handshake:    bstr,
     ID_CRED_I:      bstr,
     Fetch_CRED_U    bool,
@@ -551,7 +584,7 @@ Voucher_Request = [
 where
 
 * SS is the selected cipher suite used in the EDHOC session between U and V.
-* G_U is the ephemeral public key (G_X) of U.
+* EK_CT is either an ephemeral public key or a KEM ciphertext set by U, as defined in {U-W}.
 * H_handshake corresponds to H(message_2, message_1). It is computed as defined in {{voucher}}.
 * Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
 
@@ -561,15 +594,15 @@ W receives and parses the voucher request received over the secure connection wi
 W extracts from Voucher_Request:
 
 * SS - the selected cipher suite.
-* G_U - the ephemeral public key of U.
+* EK_CT - either an ephemeral public key or a KEM ciphertext.
 * H_handshake - the hash of message_2 and message_1.
 * ID_CRED_I - an optional identifier of U.
 * Fetch_CRED_U - flag indicating whether V expects CRED_U in voucher response.
 
-W verifies that it supports the cipher suite and parses the key in G_U.
+W verifies that it supports the cipher suite and parses the key or ciphertext in EK_CT.
 
 W uses H_handshake as a session identifier, and associates it to the device identifier ID_CRED_I.
-Note that G_U is a unique ephemeral key, therefore H_handshake is expected to be unique.
+Note that EK_CT is unique, as the ephemeral key or the ciphertext MUST not be reused, therefore H_handshake is expected to be unique.
 
 If processing fails up until this point, the protocol SHALL be aborted with an error code signaling a generic issue with the request, see {{rest-voucher-request}}.
 
@@ -806,7 +839,6 @@ Message 3:
 Processing in V:
 
 * The Voucher_Request fields are prepared as defined in {{voucher_request}}, with the following changes:
-  * G_U is set to G_Y, which is the ephemeral public key of U as extracted from message_2.
   * Voucher_Info is as extracted from the EAD_2 field of message_2.
 
 Processing in W happens as specified in {{voucher_request}}.
@@ -836,7 +868,7 @@ V SHOULD access the resources exposed by W through the protocol indicated by the
 ## Scheme "https" {#scheme-https}
 In case the scheme indicates "https", V MUST perform a TLS handshake with W and access the resources defined in {{uris}} using HTTP.
 If the authentication credential CRED_V can be used in a TLS handshake, e.g., an X.509 certificate of a signature public key, then V SHOULD use it to authenticate to W as a client.
-If the authentication credential CRED_V cannot be used in a TLS handshake, e.g., if the public key is a static Diffie-Hellman key, then V SHOULD first perform a TLS handshake with W using available compatible keys.
+If the authentication credential CRED_V cannot be used in a TLS handshake, e.g., if the public key is a static key, then V SHOULD first perform a TLS handshake with W using available compatible keys.
 V MUST then perform an EDHOC session over the TLS connection proving to W the possession of the private key corresponding to CRED_V.
 Performing the EDHOC session is only necessary if V did not authenticate with CRED_V in the TLS handshake with W.
 
@@ -917,11 +949,6 @@ W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup fun
 FIXME(trust model changes, since now ID_CRED_I is always revealed to V).
 The trust model used here is that U decides to which V it reveals its identity.
 In an alternative trust model where U trusts W to decide to which V it reveals U's identity, CRED_U could be sent in Voucher Response.
-
- As noted in {{Section 9.2 of RFC9528}} an ephemeral key may be used to calculate several ECDH shared secrets. In this specification, the ephemeral key G_X is also used to calculate G_XW, the shared secret with the enrollment server.
-
-FIXME(just remove this paragraph?).
-The private ephemeral key is thus used in the device for calculations of key material relating to both the authenticator and the enrollment server. There are different options for where to implement these calculations. One option is as an addition to EDHOC, i.e., to extend the EDHOC API in the device, so that EDHOC can import the public key of W (G_W) and the device identifier of U (ID_U), and then produce the encryption of ID_U which is included in Voucher_Info in EAD_1.
 
 # IANA Considerations  {#iana}
 
