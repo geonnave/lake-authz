@@ -1335,7 +1335,7 @@ The authenticator playing the role of the {{RFC9031}} JRC obtains the device ide
 Flight 4 is the OSCORE response carrying CoJP response message.
 The message is processed as specified in {{Section 8.4.2 of RFC9031}}.
 
-# Examples of protocol execution
+# Examples of protocol execution {#examples}
 This section presents high level examples of the protocol execution.
 
 Note: the examples below include samples of access policies used by W. These are provided for the sake of completeness only, since the authorization mechanism used by W is out of scope in this document.
@@ -1345,15 +1345,15 @@ This is a simple example that demonstrates a successful execution of ELA.
 
 Premises:
 
-- device u1 has ID_U = key id = 14
-- the access policy in W specifies, via a list of ID_U, that device u1 can enroll via any domain authenticator, i.e., the list contains ID_U = 14.
+- device u1 has identity ID_CRED_I = key id = 14
+- the access policy in W specifies, via a list of identities, that device u1 can enroll via any domain authenticator, i.e., the list contains ID_CRED_I = 14.
 In this case, the policy only specifies a restriction in terms of U, effectively allowing enrollment via any V.
 
 Execution:
 
 1. device u1 discovers a gateway (v1) and tries to enroll
-2. gateway v1 identifies the zero-touch join attempt by checking that the label of EAD_1 = -TBD1, and prepares a Voucher Request using the information contained in the value of EAD_1
-2. upon receiving the request, W obtains ID_U = 14, authorizes the access, and replies with Voucher Response
+2. gateway v1 identifies the zero-touch join attempt by checking that the label of the EAD item in EAD_3 is -TBD1, and prepares a Voucher Request using the information contained in the value of the EAD item
+2. upon receiving the request, W obtains ID_CRED_I = 14, authorizes the access, and replies with Voucher Response
 
 ## Wrong gateway {#example_wrong_gateway}
 In this example, a device u1 tries to enroll a domain via gateway v1, but W denies the request because the pairing (u1, v1) is not configured in its access policies.
@@ -1363,12 +1363,12 @@ This example also illustrates how the REJECT_INFO field of the EDHOC error Acces
 Premises:
 
 - devices and gateways communicate via Bluetooth Low Energy (BLE), therefore their network identifiers are MAC addresses (EUI-48)
-- device u1 has ID_U = key id = 14
+- device u1 has ID_CRED_I = key id = 14
 - there are 3 gateways in the radio range of u1:
   - v1 with MAC address = A2-A1-88-EE-97-75
   - v2 with MAC address = 28-0F-70-84-51-E4
   - v3 with MAC address = 39-63-C9-D0-5C-62
-- the access policy in W specifies, via a mapping of shape (ID_U; MAC1, MAC2, ...) that device u1 can only join via gateway v3, i.e., the mapping is: (14; 39-63-C9-D0-5C-62)
+- the access policy in W specifies, via a mapping of shape (ID_CRED_I; MAC1, MAC2, ...) that device u1 can only join via gateway v3, i.e., the mapping is: (14; 39-63-C9-D0-5C-62)
 - W is able to map the PoP key of the gateways to their respective MAC addresses
 
 Execution:
