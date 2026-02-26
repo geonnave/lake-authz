@@ -119,6 +119,7 @@ informative:
   I-D.ietf-lake-reqs:
   I-D.amsuess-core-coap-over-gatt:
   I-D.ietf-lake-edhoc-impl-cons:
+  I-D.ietf-lake-app-profiles:
   IEEE802.15.4:
     title: "IEEE Std 802.15.4 Standard for Low-Rate Wireless Networks"
     author:
@@ -398,6 +399,8 @@ info = (
 )
 ~~~~~~~~~~
 
+Finally, since the ELA authorization flow happens in EDHOC message_3 and message_4, the ELA is also compatible with EDHOC application profiles, as defined in {{I-D.ietf-lake-app-profiles}} where negotiation of capabilities happen in message_1 and message_2.
+This can be used, for example, to enable U or V to learn about each other's capability for executing the ELA protocol.
 
 ## Device <-> Enrollment Server (U <-> W) {#U-W}
 
