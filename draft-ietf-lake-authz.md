@@ -739,7 +739,7 @@ Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4,
       |                               |
       |       EDHOC message_3         |                              W
       +------------------------------>|                              |
-      | EAD_1 = (-TBD1, Voucher_info) |                              |
+      | EAD_3 = (-TBD1, Voucher_info) |                              |
       |                               |             VREQ             |
       |                               +----------------------------->|
       |                               |   (SS, EK_CT, H_handshake,   |
@@ -751,7 +751,7 @@ Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4,
       |                               |
       |       EDHOC message_4         |
       +<------------------------------|
-      |   EAD_2 = (-TBD2, Voucher)    |
+      |   EAD_4 = (-TBD2, Voucher)    |
       |                               |
 ~~~~~~~~~~~
 {: #fig-u-initiator title="In ELA regular flow, U is the EDHOC Initiator." artwork-align="center"}
@@ -1079,6 +1079,8 @@ They were developed to address scenarios where V's are radio gateways to which U
 
 ## U broadcasts message_1 {#strat-anycast}
 
+TODO: remove section? because now Voucher_Info is not sent in message_1 anymore, so this strategy stops making sense.
+
 This strategy consists in U broadcasting EDHOC message_1.
 When each of the V's in radio range of U receive message_1, one of the following can happen:
 
@@ -1127,37 +1129,44 @@ It requires that the network layer offers a mechanism to configure its beacon pa
 Depending on the network type, a solicitation packet may also be needed, as is the case of non-beaconed IEEE 802.15.4 and BLE with GATT.
 
 ~~~~~~~~~~~ aasvg
-+-------+--------+                       +-------+--------+
-| Init  | Client |                       | Resp  | Server |
-+-------+--------+                       +----------------+
-|       U        |                       |       V        |
-+----------------+                       +----------------+
-        |                                        |
-        + - - - - - - - - - - - - - - - - - - -->|
-        |     Optional network solicitation      |
-        |                                        |
-        |<---------------------------------------+
-        |   Network discovery (contains V_INFO)  |
-        |                                        |
-        |            EDHOC message_1             |
-        +--------------------------------------->|
-        |        (?EAD_1 = Voucher_Info)         |
-        |                                        |
++-------+--------+                          +-------+--------+
+| Init  | Client |                          | Resp  | Server |
++-------+--------+                          +----------------+
+|       U        |                          |       V        |
++----------------+                          +----------------+
+        |                                           |
+        + - - - - - - - - - - - - - - - - - - - - ->|
+        |      Optional network solicitation        |
+        |                                           |
+        |<------------------------------------------+
+        |  Network advertisement (contains V_INFO)  |
+        |                                           |
+        |                                           |
+        |             EDHOC message_1               |
+        +------------------------------------------>|
+        |                                           |
+        |             EDHOC message_2               |
+        +<------------------------------------------|
+        |                                           |
+        |             EDHOC message_3               |
+        +------------------------------------------>|
+        |        (EAD_3 = Voucher_Info)             |
+        |                                           |
 
-         ( ... protocol continues normally ... )
+           ( ... protocol continues normally ... )
 ~~~~~~~~~~~
 {: #fig-adv-beacon title="Advertising ELA using V_INFO in network-layer beacons." artwork-align="center"}
 
 This strategy can be used, for example, in IEEE 802.15.4, where an Enhanced Beacon {{IEEE802.15.4}} can be used to transmit V_INFO.
 Specifically, a new information element for carrying V_INFO can be defined according to {{RFC8137}}.
 
-This approach has the advantage of requiring minimal changes to the regular protocol as presented in {{protocol-overview}}, i.e., no reverse flow.
+This approach has the advantage of requiring minimal changes to the regular protocol as presented in {{protocol-overview}}, i.e., it does not require using the ELA reverse flow.
 It requires, however, some profiling of the lower layer beacons.
 
 ### V_INFO in EAD_1 {#adv-ead1}
 
 The ELA reverse flow (see {{reverse-u-responder}}) allows implementing advertising where U first sends a trigger packet, in the format of a CoAP request that is broadcasted to the newtork.
-When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has label -TBD1 and value V_INFO (see Section {{optimization-strat}}).
+When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has label -TBD4 and value V_INFO (see {{strat-advertise}}).
 
 ~~~~~~~~~~~ aasvg
 +-------+--------+                +-------+--------+
@@ -1188,9 +1197,7 @@ V_INFO = (
 ~~~
 
 This approach enables a simple filtering mechanism, where only V's that support ELA will reply.
-It also encrypts Voucher_Info (as part of EAD_2), whereas it is sent in the clear in the original flow.
 In addition, it may not require layer-two profiling (in case the network allows transporting data before authorization).
-Finally, note that the reverse flow with U as Responder protects the identity of V (instead of U's as in the forward flow).
 
 ### V_INFO in a CoAP Multicast Packet {#adv-coap-mult}
 
@@ -1199,22 +1206,29 @@ Upon receiving one or more CoAP messages and processing V_INFO, U can decide whe
 Next, the application can either keep U acting as a server, and thus employ the EDHOC reverse flow, or implement a CoAP client and use the forward flow.
 
 ~~~~~~~~~~~ aasvg
-+--------+---------+                       +--------+---------+
-|  Init  | Cli/Ser |                       |  Resp  | Cli/Ser |
-+--------+---------+                       +------------------+
-|        U         |                       |        V         |
-+------------------+                       +------------------+
-         |                                          |
-         |          POST /ela-advertisement         |
-         |<-----------------------------------------+
-         |     CoAP multicast (contains V_INFO)     |
-         |                                          |
-         |              EDHOC message_1             |
-         +----------------------------------------->|
-         |          (?EAD_1 = Voucher_Info)         |
-         |                                          |
++--------+---------+                        +--------+---------+
+|  Init  | Cli/Ser |                        |  Resp  | Cli/Ser |
++--------+---------+                        +------------------+
+|        U         |                        |        V         |
++------------------+                        +------------------+
+         |                                           |
+         |          POST /ela-advertisement          |
+         |<------------------------------------------+
+         |     CoAP multicast (contains V_INFO)      |
+         |                                           |
+         |             EDHOC message_1               |
+         +------------------------------------------>|
+         |                                           |
+         |             EDHOC message_2               |
+         +<------------------------------------------|
+         |                                           |
+         |             EDHOC message_3               |
+         +------------------------------------------>|
+         |        (EAD_3 = Voucher_Info)             |
+         |                                           |
 
-          ( ... protocol continues normally ... )
+            ( ... protocol continues normally ... )
+
 ~~~~~~~~~~~
 {: #fig-adv-coap-mult title="Advertising ELA using the network layer." artwork-align="center"}
 
@@ -1227,8 +1241,7 @@ V_INFO = (
 )
 ~~~
 
-One advantage of this approach is that, since U is the initiator, its identity is protected in the context of the EDHOC handshake.
-On the other hand, the periodic multicast may have resource usage impacts in the network.
+In this approach, the periodic multicast may have resource usage impacts in the network.
 
 # Use with Constrained Join Protocol (CoJP)
 
