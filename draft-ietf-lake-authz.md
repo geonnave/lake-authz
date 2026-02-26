@@ -335,7 +335,7 @@ U                              V                                       W
 |                              |                                       |
 |         EDHOC message_3      |                                       |
 +----------------------------->|                                       |
-|         (EAD_3 = LOC_W)      |                                       |
+|    (EAD_3 = LOC_W, EK_CT)    |                                       |
 |                              |                                       |
 |                              |        Voucher Request (VREQ)         |
 |                              +-------------------------------------->|
@@ -381,7 +381,7 @@ The intermediate pseudo-random key PRK is derived using EDHOC_Extract():
   * PRK = EDHOC_Extract(salt, IKM)
     * where salt = 0x (the zero-length byte string)
     * Computation of IKM depends on the EDHOC method in use.
-      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or v.v.), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-V}}.
+      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or v.v.), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-W}}.
       * If the method is based on a Key Encapsulation Mechanism (KEM), IKM is the shared secret resulting from encapsulating PK_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
 
 The output keying material OKM is derived from PRK using EDHOC_Expand(), which is defined in terms of the EDHOC hash algorithm of the selected cipher suite SS, see {{Section 4.1.2 of RFC9528}}:
@@ -552,7 +552,7 @@ V sends EDHOC message_4 to U with the critical EAD item (-TBD2, Voucher) include
 
 #### Processing in U
 
-U receives EDHOC message_4 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_4.
+U receives EDHOC message_4 from V and processes it as specified in {{Section 5.5.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_4.
 
 If U does not recognize the EAD item or the EAD item contains information that U cannot process, then U MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
 Otherwise, U MUST verify the Voucher using H_handshake, ID_CRED_I, CRED_V, and the keys derived as in {{voucher}}. If the verification fails then U MUST abort the EDHOC session.
@@ -584,7 +584,7 @@ Voucher_Request = [
 where
 
 * SS is the selected cipher suite used in the EDHOC session between U and V.
-* EK_CT is either an ephemeral public key or a KEM ciphertext set by U, as defined in {U-W}.
+* EK_CT is either an ephemeral public key or a KEM ciphertext set by U, as defined in {{U-W}}.
 * H_handshake corresponds to H(message_2, message_1). It is computed as defined in {{voucher}}.
 * Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
 
@@ -596,7 +596,7 @@ W extracts from Voucher_Request:
 * SS - the selected cipher suite.
 * EK_CT - either an ephemeral public key or a KEM ciphertext.
 * H_handshake - the hash of message_2 and message_1.
-* ID_CRED_I - an optional identifier of U.
+* ID_CRED_I - the identifier of U.
 * Fetch_CRED_U - flag indicating whether V expects CRED_U in voucher response.
 
 W verifies that it supports the cipher suite and parses the key or ciphertext in EK_CT.
