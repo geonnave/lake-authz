@@ -114,7 +114,7 @@ informative:
   RFC8615:
   RFC8995:
   RFC9031:
-  I-D.ietf-core-oscore-edhoc:
+  RFC9668:
   I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
   I-D.amsuess-core-coap-over-gatt:
@@ -521,7 +521,7 @@ U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3
 U prepares EDHOC message_3 with EAD item (-TBD1, Voucher_Info) included in EAD_3, where Voucher_Info is specified in {{U-W}}.
 The negative sign indicates that the EAD item is critical, see {{Section 3.8 of RFC9528}}.
 
-EDHOC message_3 may be combined with an OSCORE-protected application request, see {{I-D.ietf-core-oscore-edhoc}}.
+EDHOC message_3 may be combined with an OSCORE-protected application request, see {{RFC9668}}.
 
 #### Processing in V
 
@@ -1306,11 +1306,11 @@ The authenticator SHALL map the message to a CoAP response:
 ### Flight 3
 
 The device receives EDHOC message_2 and processes it as described in {{U-V}}.
-Upon successful processing of message_2, the device prepares flight 3, which is an OSCORE-protected CoJP request containing an EDHOC message_3, as described in {{I-D.ietf-core-oscore-edhoc}}.
+Upon successful processing of message_2, the device prepares flight 3, which is an OSCORE-protected CoJP request containing an EDHOC message_3, as described in {{RFC9668}}.
 EDHOC message_3 is prepared as described in {{U-V}}.
 The OSCORE-protected payload is the CoJP Join Request object specified in {{Section 8.4.1 of RFC9031}}.
 OSCORE protection leverages the OSCORE Security Context derived from the EDHOC session, as specified in Appendix A of {{RFC9528}}.
-To that end, {{I-D.ietf-core-oscore-edhoc}} specifies that the Sender ID of the client (device) must be set to the connection identifier selected by the domain authenticator, C_R.
+To that end, {{RFC9668}} specifies that the Sender ID of the client (device) must be set to the connection identifier selected by the domain authenticator, C_R.
 OSCORE includes the Sender ID as the kid in the OSCORE option.
 The network identifier in the CoJP Join Request object is set to the network identifier obtained from the network discovery phase.
 In case of IEEE 802.15.4 networks, this is the PAN ID.
@@ -1322,8 +1322,8 @@ The device SHALL map the message to a CoAP request:
 * The Proxy-Scheme option is set to "coap".
 * The Uri-Host option is set to "lake-authz.arpa".
 * The Uri-Path option is set to ".well-known/edhoc".
-* The EDHOC option {{I-D.ietf-core-oscore-edhoc}} is set and is empty.
-* The payload is prepared as described in {{Section 3.2 of I-D.ietf-core-oscore-edhoc}}, with EDHOC message_3 and the CoJP Join Request object as the OSCORE-protected payload.
+* The EDHOC option {{RFC9668}} is set and is empty.
+* The payload is prepared as described in {{Section 3.2 of RFC9668}}, with EDHOC message_3 and the CoJP Join Request object as the OSCORE-protected payload.
 
 Note that the OSCORE Sender IDs are derived from the connection identifiers of the EDHOC session.
 This is in contrast with {{RFC9031}} where ID Context of the OSCORE Security Context is set to the device identifier (pledge identifier).
