@@ -1074,27 +1074,8 @@ Note for IANA reviewers: the preferred value range is 0-255 (Expert Review).
 
 When ELA is used for zero-touch enrollment of IoT devices, U may have little to no knowledge about V's available in its vicinity.
 This may lead to situations where U retries several times at different V's until it finds one that works.
-This section presents two optimization strategies for such cases.
+This section presents an optimization strategy and different approaches to implement it.
 They were developed to address scenarios where V's are radio gateways to which U wants to enroll, but may also be applicable to other use cases.
-
-## U broadcasts message_1 {#strat-anycast}
-
-TODO: remove section? because now Voucher_Info is not sent in message_1 anymore, so this strategy stops making sense.
-
-This strategy consists in U broadcasting EDHOC message_1.
-When each of the V's in radio range of U receive message_1, one of the following can happen:
-
-- V does not implement EDHOC, and drops the message
-- V does not implement ELA, and drops the message (even though the EAD_1 option is critical, broadcast messages should not have error replies)
-- V forwards message_1 to W as VREQ, but W does not authorize it, and error handling is applied
-- V forwards message_1 to W as VREQ, W authorizes it, and the protocol continues normally
-
-U is expected to receive and process at most one message_2 as response, which contains the Voucher.
-In case U receives additional message_2's, they MUST be silently dropped.
-
-This strategy may increase the number of messages that need to be processed by V and W, in exchange for reducing resource usage in U.
-
-Security concerns related to this strategy, including potential reuse of G_X and double processing of message_2, are discussed in {{sec-cons}}.
 
 ## V advertises support for ELA {#strat-advertise}
 
