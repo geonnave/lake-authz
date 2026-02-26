@@ -114,7 +114,6 @@ informative:
   RFC8615:
   RFC8995:
   RFC9031:
-  RFC9668:
   I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
   I-D.amsuess-core-coap-over-gatt:
@@ -432,7 +431,7 @@ The external authorization data EAD_4 contains an EAD item with ead_label = -TBD
 
 The voucher is an assertion to U that W has authorized V.
 It is encrypted using the EDHOC AEAD algorithm of the selected cipher suite SS specified in SUITE_I of EDHOC message_1.
-It consists of the 'ciphertext' field of a COSE_Encrypt0 object, which is a byte string, as defined below.
+It consists of the 'ciphertext' field of a COSE_Encrypt0 object {{RFC9052}}, which is a byte string, as defined below.
 
 ~~~~~~~~~~~ cddl
 Voucher = bstr
@@ -713,8 +712,6 @@ where
 
 ## Reverse flow with U as Responder {#reverse-u-responder}
 
-TODO(fix this section with new ID_CRED_I-based solution)
-
 This section presents a protocol variant in which U is the EDHOC Responder.
 This may allow optimizations in certain constrained network technologies.
 For example, one use case is having V broadcast message_1, to which U responds with a message_2 whose EAD_2 field contains Voucher_Info.
@@ -889,7 +886,7 @@ The normative requirements in {{scheme-https}} on performing the DTLS handshake 
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
 ## Scheme "coap"
-In case the scheme indicates "coap", V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE and CoAP.
+In case the scheme indicates "coap", V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
 The authentication credential in this EDHOC session MUST be CRED_V.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the EDHOC session.
 
@@ -1167,7 +1164,7 @@ When a suitable V receives the solicitation, if it implements ELA, it should res
 
      ( ... reverse flow continues normally ... )
 ~~~~~~~~~~~
-{: #fig-adv-ead1 title="Advertising ELA using V_INFO in EAD_1, eploying the EDHOC reverse flow with U as responder." artwork-align="center"}
+{: #fig-adv-ead1 title="Advertising ELA using V_INFO in EAD_1, employing the EDHOC reverse flow with U as responder." artwork-align="center"}
 
 Note that V will only reply if it supports ELA.
 V_INFO can be structured to contain only an optional domain identifier:
