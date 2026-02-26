@@ -722,8 +722,8 @@ Note that this is different from the EDHOC reverse message flow defined in {{App
 
 ### U is the Initiator {#u-initiator}
 
-For clarity, we first present the "default flow" with U as Initiator, as described in {{protocol-overview}} and {{U-V}}.
-Note that Voucher_Info and Voucher are carried in EDHOC message_1 and message_2, respectively.
+For clarity, we first present the regular flow with U as Initiator, as described in {{protocol-overview}} and {{U-V}}.
+Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4, respectively.
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
@@ -731,41 +731,43 @@ Note that Voucher_Info and Voucher are carried in EDHOC message_1 and message_2,
 | Initiator |                   | Responder |
 +-----+-----+                   +-----+-----+
       |                               |
+      |       EDHOC message_1         |
+      +------------------------------>|
       |                               |
-      |       EDHOC message_1         |                              W
+      |       EDHOC message_2         |
+      +<------------------------------|
+      |                               |
+      |       EDHOC message_3         |                              W
       +------------------------------>|                              |
       | EAD_1 = (-TBD1, Voucher_info) |                              |
       |                               |             VREQ             |
       |                               +----------------------------->|
-      |                               | (SS, G_X, Voucher_Info,      |
-      |                               |  H_message_1, ?opaque_state) |
+      |                               |   (SS, EK_CT, H_handshake,   |
+      |                               |    ID_CRED_I, Fetch_CRED_U)  |
       |                               |                              |
       |                               |             VRES             |
       |                               +<---------------------------->|
-      |                               |    (?Voucher, ?opaque_state) |
-      |       EDHOC message_2         |
+      |                               |      (Voucher, ?CRED_U)      |
+      |                               |
+      |       EDHOC message_4         |
       +<------------------------------|
-      |   EAD_2 = (-TBD2, ?Voucher)   |
-      |                               |
-      |       EDHOC message_3         |
-      +------------------------------>|
-      |                               |
+      |   EAD_2 = (-TBD2, Voucher)    |
       |                               |
 ~~~~~~~~~~~
-{: #fig-u-initiator title="In ELA default flow, U is the EDHOC Initiator." artwork-align="center"}
+{: #fig-u-initiator title="In ELA regular flow, U is the EDHOC Initiator." artwork-align="center"}
 
-In the ELA default flow, once message_2 processing is finalized (including processing of EAD_2), U considers V authenticated through W.
+In the ELA regular flow, once message_4 processing is finalized (including processing of EAD_4), both U and V are authorized to interact.
 
 ### U is the Responder {#u-responder}
 
 ELA also works with U as the EDHOC Responder, a setup we refer to as the "ELA reverse flow", as shown in {{fig-u-responder}}.
 
 We present this variant as a set of changes to the regular protocol flow.
-That is, here we only describe the differences in processing, when compared to the ELA default flow.
+That is, here we only describe the differences in processing, when compared to the ELA regular flow.
 
 Here is a summary of the changes needed in the ELA reverse flow:
 
-* Voucher_Info and Voucher are transported in EDHOC message_2 and message_3, respectively (instead of message_1 and message_2).
+* Voucher_Info and Voucher are transported in EDHOC message_2 and message_3, respectively (instead of message_3 and message_4).
 * The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
 
@@ -781,30 +783,27 @@ Here is a summary of the changes needed in the ELA reverse flow:
       |       EDHOC message_1         |
       +<------------------------------|
       |                               |
-      |                               |
       |       EDHOC message_2         |                              W
       +------------------------------>|                              |
       | EAD_2 = (-TBD1, Voucher_info) |                              |
       |                               |             VREQ             |
       |                               +----------------------------->|
-      |                               | (SS, G_Y, Voucher_Info,      |
-      |                               |  TH_2, ?opaque_state)        |
+      |                               |   (SS, EK_CT, H_handshake,   |
+      |                               |    ID_CRED_I, Fetch_CRED_U)  |
       |                               |                              |
       |                               |             VRES             |
       |                               +<---------------------------->|
-      |                               |    (Voucher, ?opaque_state)  |
+      |                               |    (Voucher, ?CRED_U)  |
+      |                               |
       |     EDHOC message_3           |
       +<------------------------------|
-      |   EAD_3 = (-TBD2, ?Voucher)   |
+      |   EAD_3 = (-TBD2, Voucher)   |
       |                               |
       |                               |
 ~~~~~~~~~~~
 {: #fig-u-responder title="ELA when U is the EDHOC Responder." artwork-align="center"}
 
-The following detail how the processing changes in each of the three security sessions.
-
-The way to interpret the subsections below is as follows.
-The ELA reverse flow described in this section uses most of the ELA default flow processing ({{protocol-overview}} to {{err-handling}}), except by the changes detailed in {{reverse-u-w}},  {{reverse-u-v}}, and  {{reverse-v-w}}.
+The following sections detail how the processing of ELA reverse flow changes in each of the three security sessions (U-W, U-V, V-W), when compared to the baseline ELA regular flow described in sections {{protocol-overview}} to {{err-handling}}.
 
 #### Reverse U <-> W {#reverse-u-w}
 
@@ -812,7 +811,13 @@ The protocol between U and W is carried between U and V in message_2 and message
 
 Voucher Info:
 
-* The EAD_2 item has ead_label = -TBD1 and ead_value = Voucher_Info.
+* Voucher_Info is carried in EAD_2.
+* It uses a critical EAD item with ead_label = -TBD1 and ead_value = Voucher_Info.
+
+Voucher:
+
+* The Voucher is carried in EAD_3.
+* It uses a critical EAD item with ead_label = -TBD2 and ead_value = Voucher.
 
 #### Reverse U <-> V {#reverse-u-v}
 
@@ -823,23 +828,27 @@ Message 1:
 
 Message 2:
 
-* U composes message_2 and generates G_Y, which is reused in the interaction with W.
-* U sends message_2 with critical EAD item (-TBD1, Voucher_Info) included in EAD_2.
+* U composes message_2 with a critical EAD item (-TBD1, Voucher_Info) included in EAD_2.
+* U sends message_2 to V.
 * V processes message_2 and the EAD item in EAD_2, extracting the Voucher_Info struct.
 * V sends the voucher request to W.
+
+Here, V can choose to validate CRED_U before or after making the voucher request, depending on application requirements and availability of CRED_U, as detailed in {{U-V}}.
 
 Message 3:
 
 * V receives the voucher response from W.
-* V sends message_3 with critical EAD item (-TBD2, ?Voucher) included in EAD_3.
-* Y processes message_3 and the EAD item in EAD_3.
+* V sends message_3 with critical EAD item (-TBD2, Voucher) included in EAD_3.
+* U processes message_3 and the EAD item in EAD_3.
+
+The ELA reverse flow does not require sending a final EDHOC message_4.
 
 #### Reverse V <-> W {#reverse-v-w}
 
 Processing in V:
 
 * The Voucher_Request fields are prepared as defined in {{voucher_request}}, with the following changes:
-  * Voucher_Info is as extracted from the EAD_2 field of message_2.
+  * EK_CT is as extracted from the EAD_2 field of message_2.
 
 Processing in W happens as specified in {{voucher_request}}.
 
@@ -853,11 +862,9 @@ From the point of view of W, there is no difference whether U and V run as EDHOC
 
 ### Security implications
 
-When using the reverse flow, U shares its identity before it can learn (1) V's identity and (2) whether or not the Voucher is valid.
-
 In the reverse flow, Voucher_Info is confidentiality and integrity protected, while Voucher is also authenticated.
 These properties are inherited from EDHOC message_2 and message_3.
-This is a higher level of protection than with the regular flow.
+In contrast, the ELA regular flow provides confidentiality, integrity protection, and authentication to both Voucher_info and Voucher, as inherited from EDHOC message_3 and message_4.
 
 # REST Interface at W {#rest_interface}
 
@@ -962,9 +969,9 @@ IANA has registered the following entries in the "EDHOC External Authorization D
 | TBD2 | bstr | Voucher structure, prepared by the Enrollment Server (W). |
 {: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l"}
 
-The ead_label = TBD1 corresponds to the ead_value = Voucher_Info, which can be carried in either EAD_1 or EAD_2, depending on whether U acts as EDHOC Initiator or Responder, see {{reverse-u-responder}}.
+The ead_label = TBD1 corresponds to the ead_value = Voucher_Info, which can be carried in either EAD_2 or EAD_3, depending on whether U acts as EDHOC Initiator or Responder, see {{reverse-u-responder}}.
 
-The ead_label = TBD2 corresponds to ead_value = Voucher, and can be carried in either EAD_2 or EAD_3, see {{reverse-u-responder}}.
+The ead_label = TBD2 corresponds to ead_value = Voucher, and can be carried in either EAD_3 or EAD_4, see {{reverse-u-responder}}.
 
 Note for IANA reviewers: the preferred value range is 0-23 (Standards Action with Expert Review).
 
@@ -1144,7 +1151,7 @@ Depending on the network type, a solicitation packet may also be needed, as is t
 This strategy can be used, for example, in IEEE 802.15.4, where an Enhanced Beacon {{IEEE802.15.4}} can be used to transmit V_INFO.
 Specifically, a new information element for carrying V_INFO can be defined according to {{RFC8137}}.
 
-This approach has the advantage of requiring minimal changes to the default protocol as presented in {{protocol-overview}}, i.e., no reverse flow.
+This approach has the advantage of requiring minimal changes to the regular protocol as presented in {{protocol-overview}}, i.e., no reverse flow.
 It requires, however, some profiling of the lower layer beacons.
 
 ### V_INFO in EAD_1 {#adv-ead1}
