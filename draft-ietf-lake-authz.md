@@ -944,16 +944,27 @@ In case of a successful lookup of the authentication credential at W, W MUST iss
 
 # Security Considerations  {#sec-cons}
 
-This specification builds on and reuses many of the security constructions of EDHOC, e.g., shared secret calculation and key derivation. The security considerations of EDHOC {{RFC9528}} apply with modifications discussed here.
+This specification builds on and reuses many of the security constructions of EDHOC, e.g., shared secret calculation and key derivation.
+The security considerations of EDHOC {{RFC9528}} apply with modifications discussed here.
+These considerations apply to the ELA regular flow.
+For considerations about the ELA reverse flow, see {{reverse-u-responder}}.
+
+The Voucher_Info and Voucher structs are sent over authenticated channels that are confidentiality and integrity protected between U and V, i.e., in EDHOC fields EAD_3 and EAD_4.
+While ELA reuses several components of EDHOC, it does not reuse keys from EDHOC (such as the ephemeral key G_X) to protect fields Voucher_Info and Voucher.
+
+ELA is compatible with the currently standardized Diffie-Hellman shared secret derivation of EDHOC.
+Considering cryptographic recommendations by government agencies and the industry, ELA is also compatible with post-quantum cryptography primitives for deriving a shared secret, namely via the EK_CT field which can contain a KEM ciphertext according to the selected cipher suite.
+Post-quantum cipher suites that could be used in EDHOC are currently under standardization in COSE {{I-D.ietf-jose-pqc-kem}}.
 
 EDHOC provides identity protection of the Initiator, here the device.
 In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with W.
 
-Although W learns about the identity of U after receiving VREQ, this information must not be disclosed to V, until U has revealed its identity to V with ID_CRED_I in message_3.
-W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{fig-protocol}}.
-FIXME(trust model changes, since now ID_CRED_I is always revealed to V).
-The trust model used here is that U decides to which V it reveals its identity.
-In an alternative trust model where U trusts W to decide to which V it reveals U's identity, CRED_U could be sent in Voucher Response.
+W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{U-V}}.
+The trust model used here is that U reveals its identity to any V, before knowing if the ELA authorization flow will be successfully completed.
+In onboarding use cases, U MAY choose to use an onboarding-only identity, whereas future operational communications can use a different identity under the already established secure channel.
+
+In the ELA regular flow, EDHOC message_4 is mandatory since it carries the Voucher.
+Implementations MUST NOT omit message_4 when ELA is in use.
 
 # IANA Considerations  {#iana}
 
