@@ -116,7 +116,6 @@ informative:
   RFC9031:
   I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
-  I-D.amsuess-core-coap-over-gatt:
   I-D.ietf-lake-edhoc-impl-cons:
   I-D.ietf-lake-app-profiles:
   IEEE802.15.4:
@@ -297,7 +296,7 @@ W needs to be available during the execution of the protocol between U and V.
 
 ## Overview {#protocol-overview}
 
-The ELA protocol consist of three security sessions going on in parallel:
+The ELA protocol consists of three security sessions going on in parallel:
 
 1. The EDHOC session between device (U) and (domain) authenticator (V)
 2. Voucher Request/Response between authenticator (V) and enrollment server (W)
@@ -862,7 +861,7 @@ From the point of view of W, there is no difference whether U and V run as EDHOC
 
 In the reverse flow, Voucher_Info is confidentiality and integrity protected, while Voucher is also authenticated.
 These properties are inherited from EDHOC message_2 and message_3.
-In contrast, the ELA regular flow provides confidentiality, integrity protection, and authentication to both Voucher_info and Voucher, as inherited from EDHOC message_3 and message_4.
+In contrast, the ELA regular flow provides confidentiality, integrity protection, and authentication to both Voucher_Info and Voucher, as inherited from EDHOC message_3 and message_4.
 
 # REST Interface at W {#rest_interface}
 
