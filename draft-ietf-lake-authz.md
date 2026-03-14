@@ -245,7 +245,7 @@ V may be able to access credentials over non-constrained networks, but U may be 
 To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3 or be provisioned to V over a non-constrained network, leveraging a credential identifier in ID_CRED_I (see {{fig-protocol}}).
 
 U also needs to identify itself to W, for which it reuses ID_CRED_I.
-This means that the value used by U in ID_CRED_I needs to be unique enough to be understood by both V and W.
+Note that while typically ID_CRED_I is treated as a field that only needs to be understood between two EDHOC peers (here U and V), in this case ID_CRED_I also MUST be formatted in a way that it is unambiguous to W.
 W will use ID_CRED_I to determine if the device with this identifier is authorized to enroll with V.
 
 U is also provisioned with information about W:
@@ -588,6 +588,7 @@ where
 * SS is the selected cipher suite used in the EDHOC session between U and V.
 * EK_CT is either an ephemeral public key or a KEM ciphertext set by U, as defined in {{U-W}}.
 * H_21 corresponds to H(message_2, H(message_1)). It is computed as defined in {{voucher}}.
+* ID_CRED_I is an identifier of CRED_U and is used as the identity of U during ELA execution, see {{device}}.
 * Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
 
 #### Processing in W
