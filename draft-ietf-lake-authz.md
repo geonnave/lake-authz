@@ -161,7 +161,7 @@ The (domain) authenticator may represent the service provider or some other part
 
 ELA assumes that authentication between device and authenticator is performed with EDHOC {{RFC9528}}, and defines the integration of a lightweight authorization procedure using the External Authorization Data (EAD) fields defined in EDHOC.
 
-ELA enables a low message count by performing authorization and enrollment in parallel with authentication, instead of in sequence, which is common for network access.
+ELA enables a low message count by performing authorization in parallel with authentication during an enrollment process, instead of in sequence, which is common for network access.
 It further reuses protocol elements from EDHOC, leading to reduced message sizes on constrained links.
 
 This protocol is applicable to a wide variety of settings, and can be mapped to different authorization architectures.
