@@ -377,7 +377,7 @@ The ELA protocol illustrated in {{fig-protocol}} reuses several components of ED
 In case U acts as Responder (see {{reverse-u-responder}}), EAD_2 and EAD_3 are used in message_2 and message_3, respectively.
 This document specifies two new EAD items, with ead_label = TBD1 and TBD2, see {{iana-ead}}.
 
-* ID_CRED_I and ID_CRED_R are used to identify the authentication credentials CRED_U and CRED_V, respectively. As shown at the bottom of {{fig-protocol}}, V may use W to obtain CRED_U.
+* ID_CRED_I and ID_CRED_R are used to identify the authentication credentials CRED_U and CRED_V, respectively. V may obtain CRED_U from W by setting the Fetch_CRED_U flag in the Voucher Request, see {{voucher_request}}.
 By default, CRED_V is transported in ID_CRED_R in message_2, see {{V_2}}.
 In case U is Responder, CRED_V is transported in ID_CRED_I in message_3.
 
@@ -958,21 +958,6 @@ In case of error, two cases should be considered:
 
 * Voucher Request processing fails. In this case, W MUST reply with 400 Bad Request if using HTTP, or 4.00 if using CoAP.
 * U is not authorized: this happens if W is able to process the Voucher Request, but the access policies forbid authorization. For example, the policy could enforce enrollment to a restricted list of identities, within a delimited time window, via a specific V, etc. In this case, W MUST reply with a 403 Forbidden code if using HTTP, or 4.03 if using CoAP; the payload is the serialized error_content object, with Content-Format (Content-Type) set to "application/lake-authz-vouchererror+cbor". The payload MAY be used by V to prepare an EDHOC error "Access Denied", see {{err-handling}}.
-
-### Certificate Request (/certrequest)
-
-V requests the public key certificate of U from W through the "/certrequest" path-suffix.
-To request U's authentication credential, V MUST issue a request such that:
-
-* Method is POST
-* Payload is the serialization of the ID_CRED_I (ID_CRED_R) object, as received in EDHOC message_3 (message_2).
-* Content-Format (Content-Type) is set to "application/lake-authz-certrequest+cbor"
-
-In case of a successful lookup of the authentication credential at W, W MUST issue a response such that:
-
-* Status code is 200 OK if using HTTP, or 2.04 Changed if using CoAP
-* Payload is the serialized CRED_U
-* Content-Format (Content-Type) is set to "application/lake-authz-certresponse+cbor"
 
 # Security Considerations  {#sec-cons}
 
