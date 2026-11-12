@@ -988,8 +988,8 @@ W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup fun
 The trust model used here is that U reveals its identity to any V, before knowing if the ELA authorization flow will be successfully completed.
 In onboarding use cases, U MAY choose to use an onboarding-only identity, whereas future operational communications can use a different identity under the already established secure channel.
 
-In the ELA regular flow, EDHOC message_4 is mandatory since it carries the Voucher.
-Implementations MUST NOT omit message_4 when ELA is in use.
+In the ELA regular flow, EDHOC message_4 is mandatory if it carries the Voucher.
+Implementations MUST NOT omit message_4 when vouchers in message_4 are in use.
 
 # IANA Considerations  {#iana}
 
