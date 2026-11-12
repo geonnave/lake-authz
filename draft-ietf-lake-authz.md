@@ -51,6 +51,7 @@ normative:
   RFC8949:
   RFC9052:
   RFC8613:
+  RFC8323:
   RFC9528:
   I-D.ietf-core-href:
   NIST-800-56A:
@@ -911,8 +912,8 @@ In case the scheme indicates "coaps", V SHOULD perform a DTLS handshake with W a
 The normative requirements in {{scheme-https}} on performing the DTLS handshake and EDHOC session remain the same, except that TLS is replaced with DTLS.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
-## Scheme "coap"
-In case the scheme indicates "coap", V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
+## Schemes "coap" and "coap+tcp"
+In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
 The authentication credential in this EDHOC session MUST be CRED_V.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the EDHOC session.
 
@@ -931,6 +932,7 @@ In case of CoAP with DTLS:
 In case of EDHOC and OSCORE:
 
 * "coap://example.com/.well-known/lake-authz"
+* "coap+tcp://example.com/.well-known/lake-authz"
 
 Each operation specified in the following is indicated by a path-suffix.
 
