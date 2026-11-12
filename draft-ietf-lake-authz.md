@@ -991,7 +991,7 @@ Considering cryptographic recommendations by government agencies and the industr
 Post-quantum KEMs that could be used in EDHOC are currently under standardization in COSE {{I-D.ietf-jose-pqc-kem}}.
 
 EDHOC provides identity protection of the Initiator, here the device.
-In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with W.
+In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with V.
 
 W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{U-V}}.
 The trust model used here is that U reveals its identity to any V, before knowing if the ELA authorization flow will be successfully completed.
