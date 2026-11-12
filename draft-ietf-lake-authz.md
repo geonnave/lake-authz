@@ -104,9 +104,7 @@ normative:
 informative:
 
   RFC2119:
-  RFC3172:
   RFC5280:
-  RFC6761:
   RFC7228:
   RFC7593:
   RFC8137:
@@ -1027,53 +1025,6 @@ IANA has registered the following entry in "The Well-Known URI Registry", using 
 * Specification document: \[\[this document\]\]
 * Status: permanent
 * Related information: None
-
-## Well-Known Name Under ".arpa" Name Space
-
-This document allocates a well-known name under the .arpa name space according to the rules given in {{RFC3172}} and {{RFC6761}}.
-The name "lake-authz.arpa" is requested.
-No subdomains are expected, and addition of any such subdomains requires the publication of an IETF Standards Track RFC.
-No A, AAAA, or PTR record is requested.
-
-### Domain Name Reservation Considerations
-
-As required by {{RFC6761}}, the following considerations apply to the reservation of "lake-authz.arpa":
-
-1. Users:
-Are human users expected to recognize these names as special and use them differently? In what way?
-
-No. This name is not intended for direct use or recognition by human users.
-
-2. Application Software:
-Are writers of application software expected to make their software recognize these names as special and treat them differently? In what way? (For example, if a human user enters such a name, should the application software reject it with an error message?)
-
-Yes. Applications that implement ELA and use CoAP may include "lake-authz.arpa" in the URI-Host option when the Device (U) does not yet know the address or identity of the Authenticator (V), such as during zero-touch enrollment.
-
-3. Name Resolution APIs and Libraries:
-Are writers of name resolution APIs and libraries expected to make their software recognize these names as special and treat them differently? If so, how?
-
-No.
-
-4. Caching DNS Servers:
-Are developers of caching domain name servers expected to make their implementations recognize these names as special and treat them differently? If so, how?
-
-No.
-
-5. Authoritative DNS Servers:
-Are developers of authoritative domain name servers expected to make their implementations recognize these names as special and treat them differently? If so, how?
-
-No.
-
-6. DNS Server Operators:
-Does this reserved Special-Use Domain Name have any potential impact on DNS server operators? If they try to configure their authoritative DNS server as authoritative for this reserved name, will compliant name server software reject it as invalid? Do DNS server operators need to know about that and understand why? Even if the name server software doesn't prevent them from using this reserved name, are there other ways that it may not work as expected, of which the DNS server operator should be aware?
-
-No.
-
-7. DNS Registries/Registrars:
-How should DNS Registries/Registrars treat requests to register this reserved domain name? Should such requests be denied? Should such requests be allowed, but only to a specially designated entity? (For example, the name "www.example.org" is reserved for documentation examples and is not available for registration; however, the name is in fact registered; and there is even a website at that name, which states circularly that the name is reserved for use in documentation and cannot be registered!)
-
-Any requests to register this domain name should be denied.
-
 
 ## ELA Voucher Response Parameters Registry {#iana-vres}
 
