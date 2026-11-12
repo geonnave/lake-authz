@@ -753,6 +753,7 @@ Note that this is different from the EDHOC reverse message flow defined in {{App
 
 For clarity, we first present the regular flow with U as Initiator, as described in {{protocol-overview}} and {{U-V}}.
 Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4, respectively.
+{{fig-u-initiator}} and {{fig-u-responder}} show the usual case, where U requires a Voucher and therefore sends Voucher_Info as a critical EAD item, see {{voucher_info}}.
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
