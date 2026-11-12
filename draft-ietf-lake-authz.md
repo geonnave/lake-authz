@@ -298,6 +298,10 @@ To calculate the voucher, W needs access to the hash of EDHOC message_1 and mess
 
 W needs to be available during the execution of the protocol between U and V.
 
+W may hold more than one private key corresponding to a PK_W, for example when PK_W is updated for newly provisioned devices while devices provisioned with a previous PK_W are still deployed.
+W determines the private key to use from ID_CRED_I, see {{voucher_request}}.
+In this way, LOC_W does not need to change when a new PK_W is introduced.
+
 # The Protocol {#protocol}
 
 ## Overview {#protocol-overview}
