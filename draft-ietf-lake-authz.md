@@ -421,7 +421,7 @@ The protocol between U and W is carried between U and V in message_3 and message
 
 ### Voucher_Info {#voucher_info}
 
-The external authorization data EAD_3 contains a critical EAD item with ead_label = -TBD1 and ead_value = Voucher_Info, which is a CBOR byte string:
+The external authorization data EAD_3 contains an EAD item with ead_label = TBD1 and ead_value = Voucher_Info, which is a CBOR byte string:
 
 ~~~~~~~~~~~ cddl
 Voucher_Info = bstr .cborseq Voucher_Info_Seq
@@ -438,6 +438,9 @@ where
 * EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC key exchange algorithm of the selected cipher suite SS:
   * if the algorithm is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
   * if the algorithm is a KEM, the device performs key encapsulation using the public key of W, PK_W, and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
+
+The sign of the ead_label TBD1 is usually negative, indicating that the EAD item is critical, see {{Section 3.8 of RFC9528}}; a positive sign (non-critical) is allowed when the voucher is optional.
+A positive sign allows U to complete the EDHOC session with a V that does not support ELA, in which case no voucher request is made.
 
 ### Voucher {#voucher}
 
@@ -536,14 +539,14 @@ If a Voucher is used, U learns this when it verifies the Voucher in message_4, s
 
 #### Processing in U
 
-U prepares EDHOC message_3 with EAD item (-TBD1, Voucher_Info) included in EAD_3, where Voucher_Info is specified in {{U-W}}.
-The negative sign indicates that the EAD item is critical, see {{Section 3.8 of RFC9528}}.
+U prepares EDHOC message_3 with EAD item (TBD1, Voucher_Info) included in EAD_3, where Voucher_Info is specified in {{U-W}}.
+The sign of ead_label is specified in {{voucher_info}}.
 
 #### Processing in V {#V_3}
 
 V receives EDHOC message_3 from U and processes it as specified in {{Section 5.4.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_3.
-Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
-The ead_label = -TBD1 triggers the voucher request to W as described in {{V-W}}.
+If the EAD item is critical and V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
+The Voucher_Info EAD item triggers the voucher request to W as described in {{V-W}}.
 The exchange between V and W needs to be completed successfully for the EDHOC session to be continued.
 That is, if V does not receive a valid Voucher Response from W, then V MUST abort the EDHOC session with U.
 
@@ -801,7 +804,7 @@ That is, this section only describes the differences in processing, when compare
 Here is a summary of the changes needed in the ELA reverse flow:
 
 * Voucher_Info and Voucher are transported in EDHOC message_2 and message_3, respectively (instead of message_3 and message_4).
-* The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
+* The EAD_2 and EAD_3 fields carry the Voucher_Info and Voucher EAD items, respectively, see {{reverse-u-w}}.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
 * CRED_V is transported in ID_CRED_I in message_3 (instead of ID_CRED_R in message_2).
 * SUITES_I is prepared by V (instead of U), hence the selected cipher suite SS is chosen by V (instead of U).
@@ -848,7 +851,7 @@ The protocol between U and W is carried between U and V in message_2 and message
 Voucher_Info:
 
 * Voucher_Info is carried in EAD_2.
-* It uses a critical EAD item with ead_label = -TBD1 and ead_value = Voucher_Info.
+* It uses an EAD item with ead_label = TBD1 and ead_value = Voucher_Info.
 
 Voucher:
 
@@ -864,7 +867,7 @@ Message 1:
 
 Message 2:
 
-* U composes message_2 with a critical EAD item (-TBD1, Voucher_Info) included in EAD_2.
+* U composes message_2 with an EAD item (TBD1, Voucher_Info) included in EAD_2.
 * U sends message_2 to V.
 * V processes message_2 and the EAD item in EAD_2, extracting the Voucher_Info struct.
 * V sends the voucher request to W.
@@ -896,6 +899,8 @@ A Device (U) MUST implement one of the ELA flows, and it MAY choose to implement
 V MUST support both regular and reverse flows.
 
 From the point of view of W, there is no difference whether U and V run as EDHOC Initiator or Responder.
+
+A U that sends Voucher_Info with a positive ead_label MUST be prepared to complete the EDHOC session without receiving a Voucher, including, in the regular flow, without receiving EDHOC message_4.
 
 ### Security implications
 
@@ -1345,6 +1350,7 @@ This is a simple example that demonstrates a successful execution of ELA.
 Premises:
 
 - device u1 has identity ID_CRED_U = key id = 14
+- device u1 requires a Voucher, and therefore sends the Voucher_Info EAD item as critical, i.e., with ead_label = -TBD1, see {{voucher_info}}
 - the access policy in W specifies, via a list of identities, that device u1 can enroll via any domain authenticator, i.e., the list contains ID_CRED_U = 14.
 In this case, the policy only specifies a restriction in terms of U, effectively allowing enrollment via any V.
 
