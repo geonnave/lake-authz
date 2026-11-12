@@ -883,9 +883,12 @@ From the point of view of W, there is no difference whether U and V run as EDHOC
 
 ### Security implications
 
-In the reverse flow, Voucher_Info is confidentiality and integrity protected, while Voucher is also authenticated.
-These properties are inherited from EDHOC message_2 and message_3.
-In contrast, the ELA regular flow provides confidentiality, integrity protection, and authentication to both Voucher_Info and Voucher, as inherited from EDHOC message_3 and message_4.
+Voucher_Info and Voucher inherit the protection of the EDHOC messages that carry them: message_2 and message_3 in the reverse flow, message_3 and message_4 in the regular flow.
+In the reverse flow, Voucher_Info is sent in EAD_2, which is encrypted, but the encryption only provides confidentiality against passive attacks, see {{Section 9.1 of RFC9528}}.
+In the regular flow, Voucher_Info is sent in EAD_3, which is only readable by the holder of the private key corresponding to CRED_V.
+However, since there is no previous relation between U and V (see {{domain-auth}}), U does not know whether V is authorized until it verifies the Voucher.
+Thus, in both flows, U may reveal Voucher_Info to a V that is not authorized.
+The Voucher is authenticated by W in both flows.
 
 # REST Interface at W {#rest_interface}
 
