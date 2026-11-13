@@ -1106,11 +1106,11 @@ Specifically, {{Section 5 of I-D.ietf-lake-app-profiles}} describes how EDHOC pe
 Since the ELA regular flow uses message_3 and message_4, peers can advertise support for ELA, and refrain from attempting the protocol in case one does not support it.
 In the case of the reverse flow, V can advertise a profile in message_1, while the protocol happens in message_2 and message_3.
 
-For example, to advertise support for ELA in the regular flow, U prepares EAD_1 containing an item where ead_label = TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
+For example, to advertise support for ELA in the regular flow, U prepares EAD_1 containing an item where ead_label = -TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
 
 ~~~~~~~~~~~
 <<
-   true,                                   / reply_flag /
+   true,                                   / advertise_flag /
    [e'APP-PROF-MINIMAL-CS-2', TBD1, TBD2]  / profile_id_with_eads /
 >>
 ~~~~~~~~~~~
@@ -1121,7 +1121,7 @@ Where:
 * APP-PROF-MINIMAL-CS-2 corresponds to a well-known EDHOC application profile (Method 3; Cipher Suite 2; CCS; kid), see {{Section 8 of I-D.ietf-lake-app-profiles}}
 * TBD1 and TBD2 correspond to the EAD labels registered in this document, see {{iana}}
 
-In the reply, V prepares EAD_2 containing an item where ead_label = TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
+In the reply, V prepares EAD_2 containing an item where ead_label = -TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
 
 ~~~~~~~~~~~
 <<
@@ -1130,6 +1130,9 @@ In the reply, V prepares EAD_2 containing an item where ead_label = TBD_EAD_LABE
 ~~~~~~~~~~~
 
 Where APP-PROF-EXTENSIVE corresponds to a well-known EDHOC application profile, see {{Section 8 of I-D.ietf-lake-app-profiles}}.
+
+Note to RFC Editor: Please replace all occurrences of TBD_EAD_LABEL with the value assigned by IANA to the "Supported LAKE application profiles" entry in the "EDHOC External Authorization Data" registry, as requested in {{Section 11.5 of I-D.ietf-lake-app-profiles}}.
+Please remove this note before publication.
 
 ## V advertises support for ELA {#strat-advertise}
 
