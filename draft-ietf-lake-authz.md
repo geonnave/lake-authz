@@ -606,7 +606,7 @@ where
 * EK_CT is either an ephemeral DH public key or a KEM ciphertext set by U, as defined in {{U-W}}.
 * H_12 corresponds to H(H(message_1), message_2). It is computed as defined in {{voucher}}.
 * ID_CRED_I is an identifier of CRED_U and is used as the identity of U during ELA execution, see {{device}}. It is encoded as in {{voucher}}.
-* Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
+* Fetch_CRED_U is a flag indicating whether W should try to retrieve and return the credential CRED_U corresponding to ID_CRED_I.
 
 #### Processing in W
 
@@ -616,12 +616,12 @@ W extracts from Voucher_Request:
 * SS - the selected cipher suite.
 * EK_CT - either an ephemeral DH public key or a KEM ciphertext.
 * H_12 - the hash of message_1 and message_2.
-* ID_CRED_I - the identifier of U.
+* ID_CRED_I - the identity of U.
 * Fetch_CRED_U - flag indicating whether V requests W to return CRED_U.
 
 W verifies that it supports the cipher suite SS, and uses the corresponding EDHOC Key Exchange Algorithm to determine whether EK_CT contains an ephemeral Diffie-Hellman public key or a KEM ciphertext.
 
-W uses H_12 as a session identifier, and associates it to the device identifier ID_CRED_I.
+W uses H_12 as a session identifier, and associates it to the device identity ID_CRED_I.
 Note that EK_CT is unique, as the ephemeral key or the ciphertext MUST not be reused, therefore H_12 is expected to be unique.
 
 If processing fails up until this point, the protocol SHALL be aborted with an error code signaling a generic issue with the request, see {{rest-voucher-request}}.
@@ -719,7 +719,7 @@ ELA uses the EDHOC Error "Access denied" in the following way:
 * W generates error_content and transfers it to V via the secure connection.
   If REJECT_TYPE is 1, then REJECT_INFO is encrypted from W to U using the EDHOC AEAD algorithm.
   W signals the error via an appropriate status code in the REST interface, as defined in {{rest-voucher-request}}.
-* V receives error_content, prepares an EDHOC "Access denied" error, and sends it to U.
+* V receives error_content, prepares an "Access denied" EDHOC error message, and sends it to U.
 * U receives the error message and extracts the error_content.
   If REJECT_TYPE is 1, then U decrypts REJECT_INFO, based on which it may retry to gain access.
 
@@ -749,7 +749,7 @@ This section presents a protocol variant in which U is the EDHOC Responder.
 This may allow optimizations in certain constrained network technologies.
 For example, one use case is having V broadcast message_1, to which U responds with a message_2 whose EAD_2 field contains Voucher_Info.
 
-Note that this is different from the EDHOC reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, since no assumption is made about whether U or V is a CoAP server.
+Note that this is different from the EDHOC reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, since no assumption is made about whether U or V is a CoAP server {{RFC7252}}.
 
 ### Baseline: U is the Initiator {#u-initiator}
 
