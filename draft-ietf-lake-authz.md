@@ -562,6 +562,7 @@ In case V fails to obtain CRED_U, the session is aborted.
 #### Processing in V  {#V_4}
 
 At this point, V has authenticated U, and received a valid voucher response from W as described in {{V-W}}.
+A valid voucher response indicates that W has authorized U, regardless of whether it contains a Voucher.
 
 V prepares EDHOC message_4 where, if the voucher response contains a voucher, V includes the critical EAD item (-TBD2, Voucher) in EAD_4, i.e., ead_label = -TBD2 and ead_value = Voucher, as specified in {{voucher}}.
 
@@ -571,6 +572,9 @@ U receives EDHOC message_4 from V and processes it as specified in {{Section 5.5
 
 If EAD_4 contains an EAD item with label = -TBD2, U MUST verify the Voucher using H_12, ID_CRED_I, CRED_V, and the keys derived as in {{voucher}}.
 If the verification fails then U MUST abort the EDHOC session.
+If U sent Voucher_Info as a critical EAD item and does not receive a Voucher, i.e., EAD_4 does not contain an EAD item with label = -TBD2 or message_4 is not received, U MUST abort the EDHOC session.
+If U sent Voucher_Info as a non-critical EAD item and does not receive a Voucher, U completes the EDHOC session without an assertion from W that V is authorized, see {{voucher_info}}.
+Whether U interacts with V in this case is determined by the application in U.
 
 If U does not recognize the EAD item or the EAD item contains information that U cannot process, then U MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
 
@@ -638,6 +642,7 @@ If Fetch_CRED_U is false, W MUST NOT include CRED_U in the voucher response.
 #### Processing in W
 
 In case a Voucher is needed (as determined by the application), W retrieves CRED_V associated with the secure connection with V, and constructs the Voucher for the device with identifier ID_CRED_I (see {{voucher}}).
+Note that W cannot determine from the voucher request whether U requires a Voucher; the application in W is expected to issue a Voucher for devices configured to require one, see {{m4}}.
 
 W generates the voucher response and sends it to V over the secure connection.
 The Voucher_Response SHALL be a CBOR map as defined below:
@@ -786,7 +791,9 @@ Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4,
 ~~~~~~~~~~~
 {: #fig-u-initiator title="In ELA regular flow, U is the EDHOC Initiator." artwork-align="center"}
 
-In the ELA regular flow, once message_4 processing is finalized (including processing of EAD_4), both U and V are authorized to interact.
+In the ELA regular flow, once message_4 processing is finalized (including processing of EAD_4), V knows that W has authorized U, since it received a valid voucher response.
+If U received and verified a Voucher, U knows that W has authorized V, and both U and V are authorized to interact.
+The case where U does not receive a Voucher is specified in {{m4}}.
 
 ### U is the Responder {#u-responder}
 
@@ -868,8 +875,8 @@ Here, V can choose to validate CRED_U before or after making the voucher request
 Message 3:
 
 * V receives the voucher response from W.
-* V sends message_3 with critical EAD item (-TBD2, Voucher) included in EAD_3.
-* U processes message_3 and the EAD item in EAD_3.
+* V sends message_3 where, if the voucher response contains a voucher, the critical EAD item (-TBD2, Voucher) is included in EAD_3.
+* U processes message_3 and EAD_3 as specified for message_4 and EAD_4 in {{m4}}.
 
 The ELA reverse flow does not require sending a final EDHOC message_4.
 
