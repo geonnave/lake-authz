@@ -523,6 +523,8 @@ ID_CRED_R contains the CWT Claims Set with 'kccs' as COSE header_map, see {{Sect
 #### Processing in U
 
 U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}.
+At this stage, V has proven possession of the private key corresponding to CRED_V, but U does not know whether V is authorized.
+If a Voucher is used, U learns this when it verifies the Voucher in message_4, see {{m4}}.
 
 ### Message 3
 
