@@ -51,6 +51,7 @@ normative:
   RFC8949:
   RFC9052:
   RFC8613:
+  RFC8323:
   RFC9528:
   I-D.ietf-core-href:
   NIST-800-56A:
@@ -103,9 +104,7 @@ normative:
 informative:
 
   RFC2119:
-  RFC3172:
   RFC5280:
-  RFC6761:
   RFC7228:
   RFC7593:
   RFC8137:
@@ -296,6 +295,10 @@ To calculate the voucher, W needs access to the hash of EDHOC message_1 and mess
 * W MUST verify that V is in possession of the private key corresponding to the public key of CRED_V
 
 W needs to be available during the execution of the protocol between U and V.
+
+W may hold more than one private key corresponding to a PK_W, for example when PK_W is updated for newly provisioned devices while devices provisioned with a previous PK_W are still deployed.
+W determines the private key to use from ID_CRED_I, see {{voucher_request}}.
+In this way, LOC_W does not need to change when a new PK_W is introduced.
 
 # The Protocol {#protocol}
 
@@ -520,6 +523,8 @@ ID_CRED_R contains the CWT Claims Set with 'kccs' as COSE header_map, see {{Sect
 #### Processing in U
 
 U receives EDHOC message_2 from V and processes it as specified in {{Section 5.3.3 of RFC9528}}.
+At this stage, V has proven possession of the private key corresponding to CRED_V, but U does not know whether V is authorized.
+If a Voucher is used, U learns this when it verifies the Voucher in message_4, see {{m4}}.
 
 ### Message 3
 
@@ -883,9 +888,12 @@ From the point of view of W, there is no difference whether U and V run as EDHOC
 
 ### Security implications
 
-In the reverse flow, Voucher_Info is confidentiality and integrity protected, while Voucher is also authenticated.
-These properties are inherited from EDHOC message_2 and message_3.
-In contrast, the ELA regular flow provides confidentiality, integrity protection, and authentication to both Voucher_Info and Voucher, as inherited from EDHOC message_3 and message_4.
+Voucher_Info and Voucher inherit the protection of the EDHOC messages that carry them: message_2 and message_3 in the reverse flow, message_3 and message_4 in the regular flow.
+In the reverse flow, Voucher_Info is sent in EAD_2, which is encrypted, but the encryption only provides confidentiality against passive attacks, see {{Section 9.1 of RFC9528}}.
+In the regular flow, Voucher_Info is sent in EAD_3, which is only readable by the holder of the private key corresponding to CRED_V.
+However, since there is no previous relation between U and V (see {{domain-auth}}), U does not know whether V is authorized until it verifies the Voucher.
+Thus, in both flows, U may reveal Voucher_Info to a V that is not authorized.
+The Voucher is authenticated by W in both flows.
 
 # REST Interface at W {#rest_interface}
 
@@ -908,8 +916,8 @@ In case the scheme indicates "coaps", V SHOULD perform a DTLS handshake with W a
 The normative requirements in {{scheme-https}} on performing the DTLS handshake and EDHOC session remain the same, except that TLS is replaced with DTLS.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
-## Scheme "coap"
-In case the scheme indicates "coap", V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
+## Schemes "coap" and "coap+tcp"
+In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
 The authentication credential in this EDHOC session MUST be CRED_V.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the EDHOC session.
 
@@ -928,6 +936,7 @@ In case of CoAP with DTLS:
 In case of EDHOC and OSCORE:
 
 * "coap://example.com/.well-known/lake-authz"
+* "coap+tcp://example.com/.well-known/lake-authz"
 
 Each operation specified in the following is indicated by a path-suffix.
 
@@ -982,14 +991,14 @@ Considering cryptographic recommendations by government agencies and the industr
 Post-quantum KEMs that could be used in EDHOC are currently under standardization in COSE {{I-D.ietf-jose-pqc-kem}}.
 
 EDHOC provides identity protection of the Initiator, here the device.
-In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with W.
+In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with V.
 
 W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{U-V}}.
 The trust model used here is that U reveals its identity to any V, before knowing if the ELA authorization flow will be successfully completed.
 In onboarding use cases, U MAY choose to use an onboarding-only identity, whereas future operational communications can use a different identity under the already established secure channel.
 
-In the ELA regular flow, EDHOC message_4 is mandatory since it carries the Voucher.
-Implementations MUST NOT omit message_4 when ELA is in use.
+In the ELA regular flow, EDHOC message_4 is mandatory if it carries the Voucher.
+Implementations MUST NOT omit message_4 when vouchers in message_4 are in use.
 
 # IANA Considerations  {#iana}
 
@@ -1018,53 +1027,6 @@ IANA has registered the following entry in "The Well-Known URI Registry", using 
 * Specification document: \[\[this document\]\]
 * Status: permanent
 * Related information: None
-
-## Well-Known Name Under ".arpa" Name Space
-
-This document allocates a well-known name under the .arpa name space according to the rules given in {{RFC3172}} and {{RFC6761}}.
-The name "lake-authz.arpa" is requested.
-No subdomains are expected, and addition of any such subdomains requires the publication of an IETF Standards Track RFC.
-No A, AAAA, or PTR record is requested.
-
-### Domain Name Reservation Considerations
-
-As required by {{RFC6761}}, the following considerations apply to the reservation of "lake-authz.arpa":
-
-1. Users:
-Are human users expected to recognize these names as special and use them differently? In what way?
-
-No. This name is not intended for direct use or recognition by human users.
-
-2. Application Software:
-Are writers of application software expected to make their software recognize these names as special and treat them differently? In what way? (For example, if a human user enters such a name, should the application software reject it with an error message?)
-
-Yes. Applications that implement ELA and use CoAP may include "lake-authz.arpa" in the URI-Host option when the Device (U) does not yet know the address or identity of the Authenticator (V), such as during zero-touch enrollment.
-
-3. Name Resolution APIs and Libraries:
-Are writers of name resolution APIs and libraries expected to make their software recognize these names as special and treat them differently? If so, how?
-
-No.
-
-4. Caching DNS Servers:
-Are developers of caching domain name servers expected to make their implementations recognize these names as special and treat them differently? If so, how?
-
-No.
-
-5. Authoritative DNS Servers:
-Are developers of authoritative domain name servers expected to make their implementations recognize these names as special and treat them differently? If so, how?
-
-No.
-
-6. DNS Server Operators:
-Does this reserved Special-Use Domain Name have any potential impact on DNS server operators? If they try to configure their authoritative DNS server as authoritative for this reserved name, will compliant name server software reject it as invalid? Do DNS server operators need to know about that and understand why? Even if the name server software doesn't prevent them from using this reserved name, are there other ways that it may not work as expected, of which the DNS server operator should be aware?
-
-No.
-
-7. DNS Registries/Registrars:
-How should DNS Registries/Registrars treat requests to register this reserved domain name? Should such requests be denied? Should such requests be allowed, but only to a specially designated entity? (For example, the name "www.example.org" is reserved for documentation examples and is not available for registration; however, the name is in fact registered; and there is even a website at that name, which states circularly that the name is reserved for use in documentation and cannot be registered!)
-
-Any requests to register this domain name should be denied.
-
 
 ## ELA Voucher Response Parameters Registry {#iana-vres}
 
@@ -1146,11 +1108,11 @@ Specifically, {{Section 5 of I-D.ietf-lake-app-profiles}} describes how EDHOC pe
 Since the ELA regular flow uses message_3 and message_4, peers can advertise support for ELA, and refrain from attempting the protocol in case one does not support it.
 In the case of the reverse flow, V can advertise a profile in message_1, while the protocol happens in message_2 and message_3.
 
-For example, to advertise support for ELA in the regular flow, U prepares EAD_1 containing an item where ead_label = TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
+For example, to advertise support for ELA in the regular flow, U prepares EAD_1 containing an item where ead_label = -TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
 
 ~~~~~~~~~~~
 <<
-   true,                                   / reply_flag /
+   true,                                   / advertise_flag /
    [e'APP-PROF-MINIMAL-CS-2', TBD1, TBD2]  / profile_id_with_eads /
 >>
 ~~~~~~~~~~~
@@ -1161,7 +1123,7 @@ Where:
 * APP-PROF-MINIMAL-CS-2 corresponds to a well-known EDHOC application profile (Method 3; Cipher Suite 2; CCS; kid), see {{Section 8 of I-D.ietf-lake-app-profiles}}
 * TBD1 and TBD2 correspond to the EAD labels registered in this document, see {{iana}}
 
-In the reply, V prepares EAD_2 containing an item where ead_label = TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
+In the reply, V prepares EAD_2 containing an item where ead_label = -TBD_EAD_LABEL and ead_value encodes a profile_id_with_eads, containing the following value:
 
 ~~~~~~~~~~~
 <<
@@ -1170,6 +1132,9 @@ In the reply, V prepares EAD_2 containing an item where ead_label = TBD_EAD_LABE
 ~~~~~~~~~~~
 
 Where APP-PROF-EXTENSIVE corresponds to a well-known EDHOC application profile, see {{Section 8 of I-D.ietf-lake-app-profiles}}.
+
+Note to RFC Editor: Please replace all occurrences of TBD_EAD_LABEL with the value assigned by IANA to the "Supported LAKE application profiles" entry in the "EDHOC External Authorization Data" registry, as requested in {{Section 11.5 of I-D.ietf-lake-app-profiles}}.
+Please remove this note before publication.
 
 ## V advertises support for ELA {#strat-advertise}
 
