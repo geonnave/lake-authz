@@ -478,7 +478,7 @@ It is opaque to V, while the application in U and W can read its contents.
 
 * H_12 is H(H(message_1), message_2), used to bind the voucher to the current EDHOC session. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITES_I of EDHOC message_1. H_12 is sent to W as part of the voucher request, see {{voucher_request}}.
 
-* ID_CRED_I is the identifier of U transmitted via the voucher request.
+* ID_CRED_I is the identifier of U transmitted via the voucher request. It is a CBOR byte string whose value is the CBOR encoding of the ID_CRED_I map. Wrapping the map in a byte string lets V and W handle it as opaque bytes, so that W computes the same external_aad as U without decoding and re-encoding the map, which may not reproduce the encoding used by U (see {{Section 3.5.3 of RFC9528}}). This follows the rationale for the COSE protected header in {{Section 3 of RFC9052}}.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
@@ -604,7 +604,7 @@ where
 * SS is the selected cipher suite used in the EDHOC session between U and V.
 * EK_CT is either an ephemeral DH public key or a KEM ciphertext set by U, as defined in {{U-W}}.
 * H_12 corresponds to H(H(message_1), message_2). It is computed as defined in {{voucher}}.
-* ID_CRED_I is an identifier of CRED_U and is used as the identity of U during ELA execution, see {{device}}.
+* ID_CRED_I is an identifier of CRED_U and is used as the identity of U during ELA execution, see {{device}}. It is encoded as in {{voucher}}.
 * Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
 
 #### Processing in W
