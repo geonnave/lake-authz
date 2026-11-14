@@ -391,9 +391,9 @@ The intermediate pseudo-random key PRK is derived using EDHOC_Extract():
 
   * PRK = EDHOC_Extract(salt, IKM)
     * where salt = 0x (the zero-length byte string)
-    * Computation of IKM depends on the EDHOC method in use.
-      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or vice versa), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-W}}.
-      * If the method is based on a Key Encapsulation Mechanism (KEM), IKM is the KEM shared secret resulting from encapsulating PK_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
+    * Computation of IKM depends on the EDHOC key exchange algorithm of the selected cipher suite SS.
+      * If the algorithm is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or vice versa), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-W}}.
+      * If the algorithm is a Key Encapsulation Mechanism (KEM), IKM is the KEM shared secret resulting from encapsulating PK_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
 
 The output keying material OKM is derived from PRK using EDHOC_Expand(), which is defined in terms of the EDHOC hash algorithm of the selected cipher suite SS, see {{Section 4.1.2 of RFC9528}}:
 
@@ -433,9 +433,9 @@ Voucher_Info_Seq = [ ; used as a CBOR sequence, not array
 where
 
 * LOC_W is a CRI used by V to locate W, where CRI is defined in {{Section 5.1 of I-D.ietf-core-href}}.
-* EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC method being used in the current session:
-  * if the method is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
-  * if the method is based on a PQC KEM, the device performs key encapsulation and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
+* EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC key exchange algorithm of the selected cipher suite SS:
+  * if the algorithm is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
+  * if the algorithm is a KEM, the device performs key encapsulation and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
 
 ### Voucher {#voucher}
 
@@ -974,7 +974,7 @@ For considerations about the ELA reverse flow, see {{reverse-u-responder}}.
 The Voucher_Info and Voucher structs are sent over authenticated channels that are confidentiality and integrity protected between U and V, i.e., in EDHOC fields EAD_3 and EAD_4.
 While ELA reuses several components of EDHOC, it does not reuse keys from EDHOC (such as the ephemeral key G_X when using DH) to protect fields Voucher_Info and Voucher.
 Reuse of G_X is avoided since ephemeral keys are expected to be used only once.
-Similarly, for KEM-based methods a fresh encapsulation is performed for each session.
+Similarly, when the EDHOC key exchange algorithm is a KEM, a fresh encapsulation is performed for each session.
 
 ELA is compatible with the currently standardized Diffie-Hellman shared secret derivation of EDHOC.
 Considering cryptographic recommendations by government agencies and the industry, ELA is also compatible with post-quantum cryptography primitives for deriving a shared secret, namely via the EK_CT field which can contain a KEM ciphertext according to the selected cipher suite.
