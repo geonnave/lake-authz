@@ -52,6 +52,7 @@ normative:
   RFC9052:
   RFC8613:
   RFC9528:
+  I-D.ietf-core-href:
   NIST-800-56A:
     author:
       -
@@ -252,7 +253,7 @@ W will use ID_CRED_I to determine if the device with this identifier is authoriz
 U is also provisioned with information about W:
 
 * A static public key of W (PK_W) used to establish secure communication with the enrollment server (see {{U-W}}).
-* Location information about the enrollment server (LOC_W) that can be used by V to reach W. This is typically a URI but may alternatively be only the domain name.
+* Location information about the enrollment server (LOC_W) that can be used by V to reach W, encoded as a Constrained Resource Identifier (CRI) {{I-D.ietf-core-href}}.
 
 ## Domain Authenticator (V) {#domain-auth}
 
@@ -417,14 +418,14 @@ The external authorization data EAD_3 contains a critical EAD item with ead_labe
 Voucher_Info = bstr .cborseq Voucher_Info_Seq
 
 Voucher_Info_Seq = [ ; used as a CBOR sequence, not array
-    LOC_W: tstr,
+    LOC_W: CRI,
     EK_CT: bstr,
 ]
 ~~~~~~~~~~~
 
 where
 
-* LOC_W is a text string used by V to locate W, e.g., a URI or a domain name.
+* LOC_W is a CRI used by V to locate W, where CRI is defined in {{Section 5.1 of I-D.ietf-core-href}}.
 * EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC method being used in the current session:
   * if the method is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
   * if the method is based on a PQC KEM, the device performs key encapsulation and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
@@ -890,7 +891,7 @@ In contrast, the ELA regular flow provides confidentiality, integrity protection
 
 The interaction between V and W is enabled through a RESTful interface exposed by W.
 This RESTful interface MAY be implemented using either HTTP or CoAP.
-V SHOULD access the resources exposed by W through the protocol indicated by the scheme in the LOC_W URI.
+V SHOULD access the resources exposed by W through the protocol indicated by the scheme of LOC_W.
 
 ## Scheme "https" {#scheme-https}
 In case the scheme indicates "https", V MUST perform a TLS handshake with W and access the resources defined in {{uris}} using HTTP.
