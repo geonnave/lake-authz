@@ -802,6 +802,7 @@ Here is a summary of the changes needed in the ELA reverse flow:
 * The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
 * CRED_V is transported in ID_CRED_I in message_3 (instead of ID_CRED_R in message_2).
+* SUITES_I is prepared by V (instead of U), hence the selected cipher suite SS is chosen by V (instead of U).
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
