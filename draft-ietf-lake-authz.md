@@ -211,6 +211,9 @@ Note the cardinality of the involved parties. It is expected that the domain aut
 
 # Assumptions
 
+ELA supports both the case where U is the EDHOC Initiator and the case where U is the EDHOC Responder.
+For clarity, this document presents the protocol with U as the Initiator, except in {{reverse-u-responder}}, which presents the case where U is the Responder.
+
 The protocol is based on the following pre-existing relations between the device (U), the domain authenticator (V) and the enrollment server (W), see {{fig-trust}}.
 
 * U and W have an explicit relation: U is configured with a public key of W, see {{device}}.
@@ -376,12 +379,10 @@ The ELA protocol illustrated in {{fig-protocol}} reuses several components of ED
     * EDHOC key exchange algorithm: used to calculate the shared secret between U and W
 
 * EAD_3, EAD_4 are the External Authorization Data message fields of message_3 and message_4, respectively, see {{Section 3.8 of RFC9528}}.
-In case U acts as Responder (see {{reverse-u-responder}}), EAD_2 and EAD_3 are used in message_2 and message_3, respectively.
 This document specifies two new EAD items, with ead_label = TBD1 and TBD2, see {{iana-ead}}.
 
 * ID_CRED_I and ID_CRED_R are used to identify the authentication credentials CRED_U and CRED_V, respectively. V may obtain CRED_U from W by setting the Fetch_CRED_U flag in the Voucher Request, see {{voucher_request}}.
 By default, CRED_V is transported in ID_CRED_R in message_2, see {{V_2}}.
-In case U is Responder, CRED_V is transported in ID_CRED_I in message_3.
 
 The protocol also reuses the EDHOC_Extract and EDHOC_Expand key derivation from EDHOC (see {{Section 4 of RFC9528}}).
 
@@ -798,6 +799,7 @@ Here is a summary of the changes needed in the ELA reverse flow:
 * Voucher_Info and Voucher are transported in EDHOC message_2 and message_3, respectively (instead of message_3 and message_4).
 * The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
+* CRED_V is transported in ID_CRED_I in message_3 (instead of ID_CRED_R in message_2).
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
