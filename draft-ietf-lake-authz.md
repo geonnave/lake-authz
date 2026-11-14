@@ -173,8 +173,8 @@ This protocol is applicable to a wide variety of settings, and can be mapped to 
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}} when, and only when, they appear in all capitals, as shown here.
 
-Readers are expected to have an understanding of CBOR {{RFC8949}}, CDDL {{RFC8610}}, and EDHOC {{RFC9528}}.
-Appendix C.1 of {{RFC9528}} contains some basic info about CBOR.
+Readers are expected to have an understanding of Concise Binary Object Representation (CBOR) {{RFC8949}}, Concise Data Definition Language (CDDL) {{RFC8610}}, and EDHOC {{RFC9528}}.
+{{Appendix C.1 of RFC9528}} contains some basic info about CBOR.
 
 # Protocol Outline {#outline}
 
