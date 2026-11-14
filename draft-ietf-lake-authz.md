@@ -543,6 +543,7 @@ V receives EDHOC message_3 from U and processes it as specified in {{Section 5.4
 Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
 The ead_label = -TBD1 triggers the voucher request to W as described in {{V-W}}.
 The exchange between V and W needs to be completed successfully for the EDHOC session to be continued.
+That is, if V does not receive a valid Voucher Response from W, then V MUST abort the EDHOC session with U.
 
 As part of normal processing of EDHOC message_3, V must verify the credential of U.
 It is up to the application to decide whether to verify the credential of U before or after the voucher request to W, see pre and post -verification processing of EAD items in {{I-D.ietf-lake-edhoc-impl-cons}}.
