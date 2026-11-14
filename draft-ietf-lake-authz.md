@@ -143,7 +143,7 @@ venue:
 
 Ephemeral Diffie-Hellman Over COSE (EDHOC) is a lightweight authenticated key exchange protocol intended for use in constrained scenarios.
 This document specifies Lightweight Authorization using EDHOC (ELA).
-The procedure allows authorizing enrollment of new devices using the extension point defined in EDHOC.
+The procedure allows authorizing enrollment of new devices using the External Authorization Data (EAD) extension point defined in EDHOC.
 ELA is applicable to zero-touch onboarding of new devices to a constrained network leveraging trust anchors installed at manufacture time.
 
 --- middle
