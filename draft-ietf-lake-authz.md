@@ -46,13 +46,21 @@ author:
 
 normative:
 
+  RFC2119:
+  RFC8174:
+  RFC7252:
   RFC8366:
   RFC8392:
+  RFC8610:
+  RFC8615:
   RFC8949:
   RFC9052:
   RFC8613:
   RFC8323:
+  RFC9110:
+  RFC9147:
   RFC9528:
+  RFC9846:
   I-D.ietf-core-href:
   NIST-800-56A:
     author:
@@ -103,18 +111,12 @@ normative:
 
 informative:
 
-  RFC2119:
   RFC5280:
-  RFC7228:
   RFC7593:
   RFC8137:
-  RFC8174:
-  RFC8446:
-  RFC8610:
-  RFC8615:
-  RFC8126:
   RFC8995:
   RFC9031:
+  I-D.ietf-iotops-7228bis:
   I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
   I-D.ietf-lake-edhoc-impl-cons:
@@ -149,7 +151,7 @@ ELA is applicable to zero-touch onboarding of new devices to a constrained netwo
 # Introduction  {#intro}
 
 
-For constrained IoT deployments {{RFC7228}} the overhead and processing contributed by security protocols may be significant, which motivates the specification of lightweight protocols that are optimizing, in particular, message overhead (see {{I-D.ietf-lake-reqs}}).
+For constrained IoT deployments {{I-D.ietf-iotops-7228bis}} the overhead and processing contributed by security protocols may be significant, which motivates the specification of lightweight protocols that are optimizing, in particular, message overhead (see {{I-D.ietf-lake-reqs}}).
 This document describes Lightweight Authorization using EDHOC (ELA), a procedure for augmenting the lightweight authenticated Diffie-Hellman key exchange EDHOC {{RFC9528}} with third party-assisted authorization.
 
 ELA involves a device, a domain authenticator, and an enrollment server.
@@ -898,7 +900,7 @@ The Voucher is authenticated by W in both flows.
 # REST Interface at W {#rest_interface}
 
 The interaction between V and W is enabled through a RESTful interface exposed by W.
-This RESTful interface MAY be implemented using either HTTP or CoAP.
+This RESTful interface MAY be implemented using either HTTP {{RFC9110}} or CoAP {{RFC7252}}.
 V SHOULD access the resources exposed by W through the protocol indicated by the scheme of LOC_W.
 
 ## Scheme "https" {#scheme-https}
@@ -908,11 +910,11 @@ If the authentication credential CRED_V cannot be used in a TLS handshake, e.g.,
 V MUST then perform an EDHOC session over the TLS connection proving to W the possession of the private key corresponding to CRED_V.
 Performing the EDHOC session is only necessary if V did not authenticate with CRED_V in the TLS handshake with W.
 
-The relationship between V and W is long-lived.  HTTP/1.1 and higher support persistent connections, and SHOULD be used in order to reduce overhead if a flood of new devices need to be onboarded.  Support for TLS session resumptions tickets {{RFC8446, Section 2.2}} is appropriate for longer term associations.
+The relationship between V and W is long-lived.  HTTP/1.1 and higher support persistent connections, and SHOULD be used in order to reduce overhead if a flood of new devices need to be onboarded.  Support for TLS session resumptions tickets {{RFC9846, Section 2.2}} is appropriate for longer term associations.
 While a policy for renewal of the TLS connection should be applied, it is out of scope of this document.
 
 ## Scheme "coaps"
-In case the scheme indicates "coaps", V SHOULD perform a DTLS handshake with W and access the resources defined in {{uris}} using CoAP.
+In case the scheme indicates "coaps", V SHOULD perform a DTLS handshake {{RFC9147}} with W and access the resources defined in {{uris}} using CoAP.
 The normative requirements in {{scheme-https}} on performing the DTLS handshake and EDHOC session remain the same, except that TLS is replaced with DTLS.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
