@@ -622,7 +622,7 @@ W extracts from Voucher_Request:
 W verifies that it supports the cipher suite SS, and uses the corresponding EDHOC Key Exchange Algorithm to determine whether EK_CT contains an ephemeral Diffie-Hellman public key or a KEM ciphertext.
 
 W uses H_12 as a session identifier, and associates it to the device identity ID_CRED_I.
-Note that EK_CT is unique, as the ephemeral key or the ciphertext MUST not be reused, therefore H_12 is expected to be unique.
+Note that EK_CT is unique, as the ephemeral key or the ciphertext must not be reused, therefore H_12 is expected to be unique.
 
 If processing fails up until this point, the protocol SHALL be aborted with an error code signaling a generic issue with the request, see {{rest-voucher-request}}.
 
