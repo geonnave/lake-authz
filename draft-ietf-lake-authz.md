@@ -112,6 +112,7 @@ informative:
   RFC8446:
   RFC8610:
   RFC8615:
+  RFC8126:
   RFC8995:
   RFC9031:
   I-D.ietf-jose-pqc-kem:
@@ -630,25 +631,32 @@ If Fetch_CRED_U is false, W MUST NOT include CRED_U in the voucher response.
 In case a Voucher is needed (as determined by the application), W retrieves CRED_V associated with the secure connection with V, and constructs the Voucher for the device with identifier ID_CRED_I (see {{voucher}}).
 
 W generates the voucher response and sends it to V over the secure connection.
-The Voucher_Response SHALL be a CBOR array as defined below:
+The Voucher_Response SHALL be a CBOR map as defined below:
 
 ~~~~~~~~~~~ cddl
-Voucher_Response = [
-    ? Voucher:        bstr,
-    ? CRED_U:       bstr,
-]
+Voucher_Response = {
+    ? 1:            bstr,    ; Voucher
+    ? 2:            bstr,    ; CRED_U
+    * int => any,
+}
 ~~~~~~~~~~~
 
 where
 
-* The Voucher is defined in {{voucher}}, if present.
-* CRED_U is the credential of U corresponding to ID_CRED_I passed in the voucher request. CRED_U is included only if Fetch_CRED_U was set in the voucher request and W successfully retrieved the credential.
+* Voucher, with label 1, is defined in {{voucher}}, if present.
+* CRED_U, with label 2, is the credential of U corresponding to ID_CRED_I passed in the voucher request. CRED_U is included only if Fetch_CRED_U was set in the voucher request and W successfully retrieved the credential.
+
+The map labels are taken from the "ELA Voucher Response Parameters" registry, see {{iana-vres}}.
+Since both parameters are optional, the use of labels allows V to determine which of them is present in the Voucher_Response.
+The labels also allow extending the Voucher_Response with additional parameters.
 
 W signals the successful processing of Voucher_Request via a status code in the REST interface, as defined in {{rest-voucher-request}}.
 
 #### Processing in V
 
 V receives the voucher response from W over the secure connection.
+V parses Voucher_Response and extracts the Voucher and CRED_U, if present.
+V MUST ignore any parameter with a label that it does not recognize.
 If the voucher response is successfully received from W, then V responds to U with EDHOC message_4 as described in {{V_4}}.
 
 ## Error Handling {#err-handling}
@@ -1056,6 +1064,31 @@ How should DNS Registries/Registrars treat requests to register this reserved do
 
 Any requests to register this domain name should be denied.
 
+
+## ELA Voucher Response Parameters Registry {#iana-vres}
+
+IANA has created a new registry under the registry group "Ephemeral Diffie-Hellman Over COSE (EDHOC)" as follows:
+
+Registry Name: ELA Voucher Response Parameters
+
+Reference: [[this document]]
+
+The columns of the registry are Name, Label, CBOR Type, Description, Change Controller, and Reference, where Label is an integer and the other columns are text strings.
+The initial contents of the registry are shown in {{vres-table}}.
+For registrations made by IETF documents, the IETF is listed as Change Controller.
+
+| Name | Label | CBOR Type | Description | Change Controller | Reference |
+| Voucher | 1 | bstr | Voucher, prepared by the Enrollment Server (W) | IETF | [[this document]] |
+| CRED_U | 2 | bstr | Authentication credential of the Device (U) | IETF | [[this document]] |
+{: #vres-table title="ELA Voucher Response Parameters" cols="l r l l l l"}
+
+| Range | Registration Procedures |
+| -65536 to -25 | Specification Required |
+| -24 to 23 | Standards Action with Expert Review |
+| 24 to 65535 | Specification Required |
+{: #vres-procedures title="Registration Procedures for ELA Voucher Response Parameters" cols="l l"}
+
+Expert reviewers should take into consideration the guidelines in {{Section 10.11 of RFC9528}}.
 
 ## Media Types Registry
 
