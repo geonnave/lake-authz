@@ -478,7 +478,7 @@ It is opaque to V, while the application in U and W can read its contents.
 
 * H_12 is H(H(message_1), message_2), used to bind the voucher to the current EDHOC session. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITES_I of EDHOC message_1. H_12 is sent to W as part of the voucher request, see {{voucher_request}}.
 
-* ID_CRED_I is the identifier of U transmitted via the voucher request. It is a CBOR byte string whose value is the CBOR encoding of the ID_CRED_I map. Wrapping the map in a byte string lets V and W handle it as opaque bytes, so that W computes the same external_aad as U without decoding and re-encoding the map, which may not reproduce the encoding used by U (see {{Section 3.5.3 of RFC9528}}). This follows the rationale for the COSE protected header in {{Section 3 of RFC9052}}.
+* ID_CRED_I is the identifier of CRED_U transmitted via the voucher request. It is a CBOR byte string whose value is the CBOR encoding of the ID_CRED_I map. Wrapping the map in a byte string lets V and W handle it as opaque bytes, so that W computes the same external_aad as U without decoding and re-encoding the map, which may not reproduce the encoding used by U (see {{Section 3.5.3 of RFC9528}}). This follows the rationale for the COSE protected header in {{Section 3 of RFC9052}}.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
@@ -503,7 +503,7 @@ This section describes the processing in U and V, which includes the EDHOC proto
 #### Processing in U
 
 U composes EDHOC message_1 using authentication method, identifiers, etc. according to an agreed application profile, see {{Section 3.9 of RFC9528}}.
-The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the key agreement algorithm used between U and W.
+The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the key exchange algorithm used between U and W.
 U sends EDHOC message_1 to V.
 
 #### Processing in V
@@ -556,7 +556,7 @@ If the response contains CRED_U, V then continues processing EDHOC message_3 whe
 Even upon reception of a successful voucher response from W, if the verification of CRED_U fails, the EDHOC session is aborted.
 In this scenario, the EAD item in EAD_3 is processed as a pre-verification item {{I-D.ietf-lake-edhoc-impl-cons}}.
 
-In case V fails to obtain CRED_U, the session is aborted.
+In case V fails to obtain CRED_U, V MUST abort the EDHOC session with U.
 
 ### Message 4 {#m4}
 
