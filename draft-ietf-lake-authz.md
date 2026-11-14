@@ -116,6 +116,7 @@ informative:
   RFC8137:
   RFC8995:
   RFC9031:
+  I-D.ietf-cose-cbor-encoded-cert:
   I-D.ietf-iotops-7228bis:
   I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
@@ -248,7 +249,7 @@ V may be able to access credentials over non-constrained networks, but U may be 
 
 ## Device (U) {#device}
 
-To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3, or be provisioned to V over a non-constrained network thus leveraging a compact credential identifier in ID_CRED_I (see {{fig-protocol}}).
+To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}}, a C509 certificate {{I-D.ietf-cose-cbor-encoded-cert}}, or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3, or be provisioned to V over a non-constrained network thus leveraging a compact credential identifier in ID_CRED_I (see {{fig-protocol}}).
 
 U also needs to identify itself to W, for which it reuses ID_CRED_I.
 Note that while typically ID_CRED_I is treated as a field that only needs to be understood between two EDHOC peers (here U and V), in this case ID_CRED_I also MUST be formatted in a way that it is unambiguous to W.
