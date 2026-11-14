@@ -248,7 +248,7 @@ V may be able to access credentials over non-constrained networks, but U may be 
 
 ## Device (U) {#device}
 
-To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3 or be provisioned to V over a non-constrained network, leveraging a credential identifier in ID_CRED_I (see {{fig-protocol}}).
+To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3, or be provisioned to V over a non-constrained network thus leveraging a compact credential identifier in ID_CRED_I (see {{fig-protocol}}).
 
 U also needs to identify itself to W, for which it reuses ID_CRED_I.
 Note that while typically ID_CRED_I is treated as a field that only needs to be understood between two EDHOC peers (here U and V), in this case ID_CRED_I also MUST be formatted in a way that it is unambiguous to W.
@@ -270,20 +270,20 @@ V MUST authenticate to W using the same credential CRED_V as with U.
 Note that the type of credential used by V will depend on what is supported by U and W.
 U can signal its supported credential types by advertising EDHOC Application Profiles {{I-D.ietf-lake-app-profiles}}, specifically by using the "cred_types" element.
 
-Regarding the secure channel between V and W, the choice of protocols may affect which type of credential and methods should be used by V.
-For example, in case V and W select TLS for the secure channel and PoP, then CRED_V is an X.509 certificate, and the EDHOC method used by V is signature-based.
+Regarding the secure channel between V and W, the choice of protocols may affect which type of credential and EDHOC methods should be used by V.
+For example, in case V and W select (D)TLS {{RFC9846}} {{RFC9147}} for the secure channel and PoP, then CRED_V is an X.509 certificate, and the EDHOC method used by V is signature-based.
 Some of the possible combinations of protocols to secure the connection between V and W are listed in {{creds-table}} below.
 
 | Secure channel between V and W | Proof-of-Possession from V to W | Type of CRED_V | EDHOC method used by V |
 |--|--|--|--|
 | [D]TLS 1.3 with mutual authentication, where V is the client and W is the server. | Provided by [D]TLS. | Restricted to types that are supported by both [D]TLS and EDHOC, e.g., X.509 certificates. | V MUST authenticate using a signature. |
-| [D]TLS 1.3, where V is the client and W is the server. | Run an EDHOC session on top of the TLS-protected channel. | Any type supported by EDHOC, e.g., X.509, C509, CWT, or CCS. | Any method may be used. |
+| [D]TLS 1.3, where V is the client and W is the server. | Run an EDHOC session on top of the TLS-protected channel. | Any type supported by EDHOC, e.g., X.509 certificates, C509 certificates, CWT, or CCS. | Any method may be used. |
 | EDHOC and OSCORE, where V is the initiator and W is the responder.    | Already provided by EDHOC during the setup of the secure channel. | Any type supported by EDHOC. | Any method may be used. |
 {: #creds-table title="Examples of how to secure the connection between V and W." cols="l l l"}
 
 Note also that the secure connection between V and W may be long-lived and reused for multiple voucher requests/responses.
 
-Other details of proof-of-possession related to CRED_V and transport of CRED_V are out of scope of this document.
+Other details about the proof of possession related to CRED_V and about the transport of CRED_V are out of the scope of this document.
 
 
 
