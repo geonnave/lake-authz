@@ -157,7 +157,7 @@ This document describes Lightweight Authorization using EDHOC (ELA), a procedure
 ELA involves a device, a domain authenticator, and an enrollment server.
 The device and domain authenticator perform mutual authentication and authorization, assisted by the enrollment server that provides relevant authorization information to the device (a "voucher") and to the authenticator. The high-level model is similar to BRSKI {{RFC8995}}.
 
-In this document, we consider the target interaction for which authorization is needed to be "enrollment", for example joining a network for the first time (e.g., {{RFC9031}}), but it can be applied to authorize other target interactions.
+In this document, the target interaction for which authorization is needed is "enrollment", for example joining a network for the first time (e.g., {{RFC9031}}), but ELA can be applied to authorize other target interactions.
 
 The enrollment server may represent the manufacturer of the device, or some other party with information about the device from which a trust anchor has been pre-provisioned into the device.
 The (domain) authenticator may represent the service provider or some other party controlling access to the network in which the device is enrolling.
@@ -746,11 +746,11 @@ This section presents a protocol variant in which U is the EDHOC Responder.
 This may allow optimizations in certain constrained network technologies.
 For example, one use case is having V broadcast message_1, to which U responds with a message_2 whose EAD_2 field contains Voucher_Info.
 
-Note that this is different from the EDHOC reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, since we make no assumption about whether U or V is a CoAP server.
+Note that this is different from the EDHOC reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, since no assumption is made about whether U or V is a CoAP server.
 
 ### Baseline: U is the Initiator {#u-initiator}
 
-For clarity, we first present the regular flow with U as Initiator, as described in {{protocol-overview}} and {{U-V}}.
+For clarity, the regular flow with U as Initiator, as described in {{protocol-overview}} and {{U-V}}, is presented first.
 Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4, respectively.
 
 ~~~~~~~~~~~ aasvg
@@ -788,10 +788,10 @@ In the ELA regular flow, once message_4 processing is finalized (including proce
 
 ### U is the Responder {#u-responder}
 
-ELA also works with U as the EDHOC Responder, a setup we refer to as the "ELA reverse flow", as shown in {{fig-u-responder}}.
+ELA also works with U as the EDHOC Responder, a setup referred to as the "ELA reverse flow", as shown in {{fig-u-responder}}.
 
-We present this variant as a set of changes to the regular protocol flow.
-That is, here we only describe the differences in processing, when compared to the ELA regular flow.
+This variant is presented as a set of changes to the regular protocol flow.
+That is, this section only describes the differences in processing, when compared to the ELA regular flow.
 
 Here is a summary of the changes needed in the ELA reverse flow:
 
@@ -1137,7 +1137,7 @@ For example, V_INFO may state that:
 V_INFO can be sent over a network beacon (see {{adv-beacon}}), which may require technology specific profiling, e.g., the IEEE 802.15.4 enhanced beacon may be extended according to {{RFC8137}}.
 Alternatively, V_INFO can be sent as part of an EAD field, as shown in {{adv-ead1}}.
 
-As a guideline for implementers, we define the following field that can be included in a V_INFO structure:
+As a guideline for implementers, this document defines the following field that can be included in a V_INFO structure:
 
 ~~~~~~~~~~~ cddl
 DOMAIN_ID: bstr
