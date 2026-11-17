@@ -885,6 +885,7 @@ Processing in V:
 
 * The Voucher_Request fields are prepared as defined in {{voucher_request}}, with the following changes:
   * EK_CT is as extracted from the EAD_2 field of message_2.
+  * ID_CRED_U is ID_CRED_R, as received in message_2.
 
 Processing in W happens as specified in {{voucher_request}}.
 
