@@ -538,7 +538,7 @@ If a Voucher is used, U learns this when it verifies the Voucher in message_4, s
 U prepares EDHOC message_3 with EAD item (-TBD1, Voucher_Info) included in EAD_3, where Voucher_Info is specified in {{U-W}}.
 The negative sign indicates that the EAD item is critical, see {{Section 3.8 of RFC9528}}.
 
-#### Processing in V
+#### Processing in V {#V_3}
 
 V receives EDHOC message_3 from U and processes it as specified in {{Section 5.4.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_3.
 Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
@@ -986,7 +986,7 @@ Post-quantum KEMs that could be used in EDHOC are currently under standardizatio
 EDHOC provides identity protection of the Initiator, here the device.
 In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with V.
 
-W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{U-V}}.
+V may rely on W for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{V_3}}.
 The trust model used here is that U reveals its identity to any V, before knowing if the ELA authorization flow will be successfully completed.
 In onboarding use cases, U MAY choose to use an onboarding-only identity, whereas future operational communications can use a different identity under the already established secure channel.
 
@@ -995,17 +995,19 @@ Implementations MUST NOT omit message_4 when vouchers in message_4 are in use.
 
 # IANA Considerations  {#iana}
 
+This document has the following actions for IANA.
+
 ## EDHOC External Authorization Data Registry {#iana-ead}
 
 IANA has registered the following entries in the "EDHOC External Authorization Data" registry under the group name "Ephemeral Diffie-
    Hellman Over COSE (EDHOC)".
 
-| Name | Label | Description |
-| Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). |
-| Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). |
-{: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l"}
+| Name | Label | Description | Reference |
+| Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). | [[this document]] |
+| Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). | [[this document]] |
+{: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l l"}
 
-The ead_label = TBD1 corresponds to the ead_value = Voucher_Info, which can be carried in either EAD_2 or EAD_3, depending on whether U acts as EDHOC Initiator or Responder, see {{reverse-u-responder}}.
+The ead_label = TBD1 corresponds to the ead_value = Voucher_Info, which can be carried in either EAD_2 or EAD_3, depending on whether U acts as EDHOC Responder or Initiator, respectively, see {{reverse-u-responder}}.
 
 The ead_label = TBD2 corresponds to ead_value = Voucher, and can be carried in either EAD_3 or EAD_4, see {{reverse-u-responder}}.
 
