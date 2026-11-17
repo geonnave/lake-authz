@@ -913,8 +913,8 @@ V SHOULD access the resources exposed by W through the protocol indicated by the
 In case the scheme indicates "https", V MUST perform a TLS handshake with W and access the resources defined in {{uris}} using HTTP.
 If the authentication credential CRED_V can be used in a TLS handshake, e.g., an X.509 certificate of a signature public key, then V SHOULD use it to authenticate to W as a client.
 If V does not do so (e.g., the format of CRED_V cannot be used in TLS, or the public key of CRED_V is a static key to use for key exchange), then V first performs a TLS handshake with W, potentially using an alternative, compatible authentication credential to authenticate to W.
-V MUST then perform an EDHOC session over the TLS connection, proving to W the possession of the private key corresponding to CRED_V.
-Performing the EDHOC session is only necessary if V did not authenticate with CRED_V in the TLS handshake with W.
+V MUST then perform an EDHOC session over the established TLS connection with W, using CRED_V as its authentication credential and thus proving to W the possession of the private key corresponding to CRED_V.
+Performing the EDHOC session is REQUIRED only if V did not authenticate with CRED_V in the TLS handshake with W.
 
 The relationship between V and W is long-lived.  HTTP/1.1 and higher support persistent connections, and SHOULD be used in order to reduce overhead if a flood of new devices need to be onboarded.  Support for TLS session resumptions tickets {{RFC9846, Section 2.2}} is appropriate for longer term associations.
 While a policy for renewal of the TLS connection should be applied, it is out of scope of this document.
