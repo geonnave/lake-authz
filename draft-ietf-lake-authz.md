@@ -687,13 +687,13 @@ This section specifies the new EDHOC error "Access denied", see {{fig-error-code
 {: #fig-error-codes title="EDHOC error code and error information for ‘Access denied’."}
 
 Error code TBD3 is used to indicate to the receiver that access control has been applied and the sender has aborted the EDHOC session.
-The ERR_INFO field contains error_content which is a CBOR Sequence consisting of an integer and an optional byte string.
+The ERR_INFO field is of type error_content, which is a CBOR array consisting of an integer and an optional byte string.
 
 ~~~~~~~~~~~ cddl
-error_content = (
+error_content = [
   REJECT_TYPE:      int,
   ? REJECT_INFO:    bstr,
-)
+]
 ~~~~~~~~~~~
 
 Where:
