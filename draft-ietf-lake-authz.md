@@ -1002,8 +1002,8 @@ IANA has registered the following entries in the "EDHOC External Authorization D
    Hellman Over COSE (EDHOC)".
 
 | Name | Label | Description | Reference |
-| Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). | [[this document]] |
-| Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). | [[this document]] |
+| Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). | \[\[this document\]\] |
+| Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). | \[\[this document\]\] |
 {: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l l"}
 
 Note for IANA reviewers: the preferred value range is 0-23 (Standards Action with Expert Review).
@@ -1024,15 +1024,15 @@ IANA has created a new registry under the registry group "Ephemeral Diffie-Hellm
 
 Registry Name: ELA Voucher Response Parameters
 
-Reference: [[this document]]
+Reference: \[\[this document\]\]
 
 The columns of the registry are Name, Label, CBOR Type, Description, Change Controller, and Reference, where Label is an integer and the other columns are text strings.
 The initial contents of the registry are shown in {{vres-table}}.
 For registrations made by IETF documents, the IETF is listed as Change Controller.
 
 | Name | Label | CBOR Type | Description | Change Controller | Reference |
-| Voucher | 1 | bstr | Voucher, prepared by the Enrollment Server (W) | IETF | [[this document]] |
-| CRED_U | 2 | bstr | Authentication credential of the Device (U) | IETF | [[this document]] |
+| Voucher | 1 | bstr | Voucher, prepared by the Enrollment Server (W) | IETF | \[\[this document\]\] |
+| CRED_U | 2 | bstr | Authentication credential of the Device (U) | IETF | \[\[this document\]\] |
 {: #vres-table title="ELA Voucher Response Parameters" cols="l r l l l l"}
 
 | Range | Registration Procedures |
@@ -1056,7 +1056,7 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor", "ap
 * Encoding considerations: binary (CBOR)
 * Security considerations: See {{sec-cons}} of this document.
 * Interoperability considerations: N/A
-* Published specification: [[this document]] (this document)
+* Published specification: \[\[this document\]\] (this document)
 * Applications that use this media type: To be identified
 * Fragment identifier considerations: N/A
 * Additional information:
@@ -1078,7 +1078,7 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor", "ap
 * Encoding considerations: binary (CBOR)
 * Security considerations: See {{sec-cons}} of this document.
 * Interoperability considerations: N/A
-* Published specification: [[this document]] (this document)
+* Published specification: \[\[this document\]\] (this document)
 * Applications that use this media type: To be identified
 * Fragment identifier considerations: N/A
 * Additional information:
@@ -1100,7 +1100,7 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor", "ap
 * Encoding considerations: binary (CBOR)
 * Security considerations: See {{sec-cons}} of this document.
 * Interoperability considerations: N/A
-* Published specification: [[this document]] (this document)
+* Published specification: \[\[this document\]\] (this document)
 * Applications that use this media type: To be identified
 * Fragment identifier considerations: N/A
 * Additional information:
@@ -1118,9 +1118,9 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor", "ap
 IANA has added the following Content-Format numbers in the "CoAP Content-Formats" registry under the registry group "Constrained RESTful Environments (CoRE) Parameters".
 
 | Content Type | Content Coding | ID | Reference |
-| application/lake-authz-voucherrequest+cbor | - | TBD5 | [[this document]] |
-| application/lake-authz-voucherresponse+cbor | - | TBD6 | [[this document]] |
-| application/lake-authz-vouchererror+cbor | - | TBD7 | [[this document]] |
+| application/lake-authz-voucherrequest+cbor | - | TBD5 | \[\[this document\]\] |
+| application/lake-authz-voucherresponse+cbor | - | TBD6 | \[\[this document\]\] |
+| application/lake-authz-vouchererror+cbor | - | TBD7 | \[\[this document\]\] |
 {: #coap-content-formats title="Addition to the CoAP Content-Formats registry" cols="l l l l"}
 
 Note for IANA reviewers: the preferred value range is 0-255 (Expert Review).
