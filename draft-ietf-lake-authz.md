@@ -998,8 +998,7 @@ This document has the following actions for IANA.
 
 ## EDHOC External Authorization Data Registry {#iana-ead}
 
-IANA has registered the following entries in the "EDHOC External Authorization Data" registry under the group name "Ephemeral Diffie-
-   Hellman Over COSE (EDHOC)".
+IANA has registered the following entries in the "EDHOC External Authorization Data" registry under the group name "Ephemeral Diffie-Hellman Over COSE (EDHOC)".
 
 | Name | Label | Description | Reference |
 | Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). | \[\[this document\]\] |
@@ -1008,9 +1007,19 @@ IANA has registered the following entries in the "EDHOC External Authorization D
 
 Note for IANA reviewers: the preferred value range is 0-23 (Standards Action with Expert Review).
 
+## EDHOC Error Codes Registry {#iana-error}
+
+IANA has registered the following entry in the "EDHOC Error Codes" registry under the group name "Ephemeral Diffie-Hellman Over COSE (EDHOC)".
+
+| ERR_CODE | ERR_INFO Type | Description | Change Controller | Reference |
+| TBD3 | error_content | Access denied | IETF | [[this document]] |
+{: #error-table title="Addition to the EDHOC Error Codes registry" cols="r l l l l"}
+
+Note for IANA reviewers: the preferred value range is -24 to 23 (Standards Action).
+
 ## The Well-Known URI Registry {#iana-wk}
 
-IANA has registered the following entry in "The Well-Known URI Registry", using the template from {{RFC8615}}:
+IANA has registered the following entry in the "Well-Known URIs" registry, using the template from {{RFC8615}}:
 
 * URI suffix: lake-authz
 * Change controller: IETF
