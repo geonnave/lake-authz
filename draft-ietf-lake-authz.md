@@ -1007,10 +1007,6 @@ IANA has registered the following entries in the "EDHOC External Authorization D
 | Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). | [[this document]] |
 {: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l l"}
 
-The ead_label = TBD1 corresponds to the ead_value = Voucher_Info, which can be carried in either EAD_2 or EAD_3, depending on whether U acts as EDHOC Responder or Initiator, respectively, see {{reverse-u-responder}}.
-
-The ead_label = TBD2 corresponds to ead_value = Voucher, and can be carried in either EAD_3 or EAD_4, see {{reverse-u-responder}}.
-
 Note for IANA reviewers: the preferred value range is 0-23 (Standards Action with Expert Review).
 
 ## The Well-Known URI Registry
