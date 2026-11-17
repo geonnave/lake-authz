@@ -478,7 +478,7 @@ It is opaque to V, while the application in U and W can read its contents.
 
 * H_12 is H(H(message_1), message_2), used to bind the voucher to the current EDHOC session. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITES_I of EDHOC message_1. H_12 is sent to W as part of the voucher request, see {{voucher_request}}.
 
-* ID_CRED_I is the identifier of CRED_U transmitted via the voucher request. It is a CBOR byte string whose value is the CBOR encoding of the ID_CRED_I map. Wrapping the map in a byte string lets V and W handle it as opaque bytes, so that W computes the same external_aad as U without decoding and re-encoding the map, which may not reproduce the encoding used by U (see {{Section 3.5.3 of RFC9528}}). This follows the rationale for the COSE protected header in {{Section 3 of RFC9052}}.
+* ID_CRED_I is the identifier of CRED_U transmitted via the voucher request. It is a CBOR byte string whose value is the CBOR encoding of the ID_CRED_I map. This is the encoding of ID_CRED_I as used in context_3 (see {{Section 5.4.2 of RFC9528}}), i.e., the full CBOR map, including when the compact encoding of {{Section 3.5.3.2 of RFC9528}} is used in message_3. Wrapping the map in a byte string lets V and W handle it as opaque bytes, so that W computes the same external_aad as U without decoding and re-encoding the map, which may not reproduce the encoding used by U (see {{Section 3.5.3 of RFC9528}}). This follows the rationale for the COSE protected header in {{Section 3 of RFC9052}}.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
