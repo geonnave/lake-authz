@@ -926,7 +926,7 @@ As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
 ## Schemes "coap" and "coap+tcp"
 In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V MUST perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
-The authentication credential in this EDHOC session MUST be CRED_V.
+The authentication credential used by V in this EDHOC session MUST be CRED_V.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the EDHOC session.
 
 ## URIs {#uris}
@@ -952,7 +952,7 @@ Each operation specified in the following is indicated by a path-suffix.
 
 To request a voucher, V MUST issue a request such that:
 
-* Method is POST
+* Request method is POST
 * Payload is the serialization of the Voucher Request object, as specified in {{voucher_request}}.
 * Content-Format (Content-Type) is set to "application/lake-authz-voucherrequest+cbor"
 
