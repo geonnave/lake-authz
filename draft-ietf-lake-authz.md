@@ -1242,7 +1242,7 @@ It requires, however, some profiling of the lower layer beacons.
 ### V_INFO in EAD_1 {#adv-ead1}
 
 The ELA reverse flow (see {{reverse-u-responder}}) allows implementing advertising where U first sends a trigger packet, in the format of a CoAP request that is broadcasted to the network.
-When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has label -TBD4 and value V_INFO (see {{strat-advertise}}).
+When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has value V_INFO (see {{strat-advertise}}).
 
 ~~~~~~~~~~~ aasvg
 +-------+--------+                +-------+--------+
