@@ -1234,7 +1234,9 @@ In addition, it may not require layer-two profiling (in case the network allows 
 
 In this approach, V periodically sends a CoAP request message over multicast conveying V_INFO as its payload, see {{fig-adv-coap-mult}}.
 Upon receiving one or more CoAP messages and processing V_INFO, U can decide whether or not to initiate the ELA protocol with a given V.
-Next, the application can either keep U acting as a server, and thus employ the EDHOC reverse flow, or implement a CoAP client and use the forward flow.
+Next, U can act as Initiator and start an EDHOC session with V by transporting EDHOC messages over CoAP (see {{Appendix A.2 of RFC9528}}).
+When doing so, the application can either keep U acting as a server and thus employ the EDHOC reverse message flow, or implement a CoAP client and thus employ the EDHOC forward message flow.
+The latter builds on the assumption that V also implements a CoAP server.
 
 ~~~~~~~~~~~ aasvg
 +--------+---------+                        +--------+---------+
