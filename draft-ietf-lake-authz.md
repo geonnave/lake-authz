@@ -920,7 +920,7 @@ The relationship between V and W is long-lived.  HTTP/1.1 and higher support per
 While a policy for renewal of the TLS connection should be applied, it is out of scope of this document.
 
 ## Scheme "coaps"
-In case the scheme indicates "coaps", V SHOULD perform a DTLS handshake {{RFC9147}} with W and access the resources defined in {{uris}} using CoAP.
+In case the scheme indicates "coaps", V MUST perform a DTLS handshake {{RFC9147}} with W and access the resources defined in {{uris}} using CoAP.
 The normative requirements in {{scheme-https}} on performing the DTLS handshake and EDHOC session remain the same, except that TLS is replaced with DTLS.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
