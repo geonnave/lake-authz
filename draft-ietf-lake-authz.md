@@ -925,7 +925,7 @@ The normative requirements in {{scheme-https}} on performing the DTLS handshake 
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
 ## Schemes "coap" and "coap+tcp"
-In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
+In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V MUST perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
 The authentication credential in this EDHOC session MUST be CRED_V.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the EDHOC session.
 
