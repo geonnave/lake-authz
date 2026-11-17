@@ -58,6 +58,7 @@ normative:
   RFC8613:
   RFC8323:
   RFC9110:
+  RFC9112:
   RFC9147:
   RFC9528:
   RFC9846:
@@ -905,7 +906,7 @@ The Voucher is authenticated by W in both flows.
 # REST Interface at W {#rest_interface}
 
 The interaction between V and W is enabled through a RESTful interface exposed by W.
-This RESTful interface MAY be implemented using either HTTP {{RFC9110}} or CoAP {{RFC7252}}.
+This RESTful interface MAY be implemented using either HTTP {{RFC9110}} {{RFC9112}} or CoAP {{RFC7252}}.
 V SHOULD access the resources exposed by W through the protocol indicated by the scheme of LOC_W.
 
 ## Scheme "https" {#scheme-https}
