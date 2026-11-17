@@ -1045,7 +1045,7 @@ Expert reviewers should take into consideration the guidelines in {{Section 10.1
 
 ## Media Types Registry
 
-IANA has added the media types "application/lake-authz-voucherrequest+cbor" to the "Media Types" registry.
+IANA has added the media types "application/lake-authz-voucherrequest+cbor", "application/lake-authz-voucherresponse+cbor", and "application/lake-authz-vouchererror+cbor" to the "Media Types" registry.
 
 ### application/lake-authz-voucherrequest+cbor Media Type Registration
 
@@ -1057,7 +1057,51 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor" to t
 * Security considerations: See {{sec-cons}} of this document.
 * Interoperability considerations: N/A
 * Published specification: [[this document]] (this document)
-* Application that use this media type: To be identified
+* Applications that use this media type: To be identified
+* Fragment identifier considerations: N/A
+* Additional information:
+    * Magic number(s): N/A
+    * File extension(s): N/A
+    * Macintosh file type code(s): N/A
+* Person & email address to contact for further information: IETF LAKE Working Group (lake@ietf.org)
+* Intended usage: COMMON
+* Restrictions on usage: N/A
+* Author: LAKE WG
+* Change Controller: IETF
+
+### application/lake-authz-voucherresponse+cbor Media Type Registration
+
+* Type name: application
+* Subtype name: lake-authz-voucherresponse+cbor
+* Required parameters: N/A
+* Optional parameters: N/A
+* Encoding considerations: binary (CBOR)
+* Security considerations: See {{sec-cons}} of this document.
+* Interoperability considerations: N/A
+* Published specification: [[this document]] (this document)
+* Applications that use this media type: To be identified
+* Fragment identifier considerations: N/A
+* Additional information:
+    * Magic number(s): N/A
+    * File extension(s): N/A
+    * Macintosh file type code(s): N/A
+* Person & email address to contact for further information: IETF LAKE Working Group (lake@ietf.org)
+* Intended usage: COMMON
+* Restrictions on usage: N/A
+* Author: LAKE WG
+* Change Controller: IETF
+
+### application/lake-authz-vouchererror+cbor Media Type Registration
+
+* Type name: application
+* Subtype name: lake-authz-vouchererror+cbor
+* Required parameters: N/A
+* Optional parameters: N/A
+* Encoding considerations: binary (CBOR)
+* Security considerations: See {{sec-cons}} of this document.
+* Interoperability considerations: N/A
+* Published specification: [[this document]] (this document)
+* Applications that use this media type: To be identified
 * Fragment identifier considerations: N/A
 * Additional information:
     * Magic number(s): N/A
@@ -1071,11 +1115,13 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor" to t
 
 ## CoAP Content-Formats Registry
 
-IANA has added the following Content-Format number in the "CoAP Content-Formats" registry under the registry group "Constrained RESTful Environments (CoRE) Parameters".
+IANA has added the following Content-Format numbers in the "CoAP Content-Formats" registry under the registry group "Constrained RESTful Environments (CoRE) Parameters".
 
 | Content Type | Content Coding | ID | Reference |
-| application/lake-authz-voucherrequest+cbor | - | TBD3 | [[this document]] |
-{: #coap-content-formats title="Addition to the CoAP Content-Formats registry" cols="l l l"}
+| application/lake-authz-voucherrequest+cbor | - | TBD5 | [[this document]] |
+| application/lake-authz-voucherresponse+cbor | - | TBD6 | [[this document]] |
+| application/lake-authz-vouchererror+cbor | - | TBD7 | [[this document]] |
+{: #coap-content-formats title="Addition to the CoAP Content-Formats registry" cols="l l l l"}
 
 Note for IANA reviewers: the preferred value range is 0-255 (Expert Review).
 
