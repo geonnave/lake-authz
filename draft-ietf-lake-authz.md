@@ -1091,9 +1091,9 @@ These strategies were developed to address scenarios where V's are radio gateway
 
 ## Using EDHOC Application Profiles {#ela-profile}
 
-This section provides an example of how support for ELA can be advertised using EDHOC application profiles.
+This section provides an example of how support for ELA can be advertised using EDHOC application profiles (see {{Section 3.9 of RFC9528}}).
 
-Application Profiles for EDHOC {{I-D.ietf-lake-app-profiles}} defines mechanisms to describe and distribute parameters regarding the supported capabilities of EDHOC peers.
+The specification at {{I-D.ietf-lake-app-profiles}} defines mechanisms to describe and distribute parameters regarding the supported capabilities of EDHOC peers.
 Specifically, {{Section 5 of I-D.ietf-lake-app-profiles}} describes how EDHOC peers can advertise supported profiles by using fields EAD_1 and EAD_2 in EDHOC message_1 and message_2, respectively.
 
 Since the ELA regular flow uses message_3 and message_4, peers can advertise support for ELA, and refrain from attempting the protocol in case one does not support it.
@@ -1110,7 +1110,7 @@ For example, to advertise support for ELA in the regular flow, U prepares EAD_1 
 
 Where:
 
-* true indicates that U expects an application profile response from V in EAD_2, see {{Section 5.1 of I-D.ietf-lake-app-profiles}}
+* true indicates that U expects an analogous advertisement from V in EAD_2, see {{Section 5.1 of I-D.ietf-lake-app-profiles}}
 * APP-PROF-MINIMAL-CS-2 corresponds to a well-known EDHOC application profile (Method 3; Cipher Suite 2; CCS; kid), see {{Section 8 of I-D.ietf-lake-app-profiles}}
 * TBD1 and TBD2 correspond to the EAD labels registered in this document, see {{iana}}
 
@@ -1150,7 +1150,7 @@ DOMAIN_ID: bstr
 The DOMAIN_ID field identifies the domain to which V belongs to, for example an URL or UUID.
 
 Below are three examples of how the advertisement strategy may be applied according to different application needs.
-The examples include sending V_INFO in network beacons, as part of EAD_1 in reverse message flow, or as part of a periodic CoAP multicast packet.
+The examples include sending V_INFO in network beacons, as part of EAD_1 in reverse message flow, or as part of a periodic CoAP message sent over multicast.
 The advantages, costs, and security impacts of each approach are also discussed.
 
 ### V_INFO in network beacons {#adv-beacon}
@@ -1230,9 +1230,9 @@ V_INFO = (
 This approach enables a simple filtering mechanism, where only V's that support ELA will reply.
 In addition, it may not require layer-two profiling (in case the network allows transporting data before authorization).
 
-### V_INFO in a CoAP Multicast Packet {#adv-coap-mult}
+### V_INFO in a CoAP Message over Multicast {#adv-coap-mult}
 
-In this approach, V periodically multicasts a CoAP packet containing V_INFO, see {{fig-adv-coap-mult}}.
+In this approach, V periodically sends a CoAP request message over multicast conveying V_INFO as its payload, see {{fig-adv-coap-mult}}.
 Upon receiving one or more CoAP messages and processing V_INFO, U can decide whether or not to initiate the ELA protocol with a given V.
 Next, the application can either keep U acting as a server, and thus employ the EDHOC reverse flow, or implement a CoAP client and use the forward flow.
 
