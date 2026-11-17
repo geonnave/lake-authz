@@ -46,13 +46,22 @@ author:
 
 normative:
 
+  RFC2119:
+  RFC8174:
+  RFC7252:
   RFC8366:
   RFC8392:
+  RFC8610:
+  RFC8615:
   RFC8949:
   RFC9052:
   RFC8613:
   RFC8323:
+  RFC9110:
+  RFC9112:
+  RFC9147:
   RFC9528:
+  RFC9846:
   I-D.ietf-core-href:
   NIST-800-56A:
     author:
@@ -103,18 +112,13 @@ normative:
 
 informative:
 
-  RFC2119:
   RFC5280:
-  RFC7228:
   RFC7593:
   RFC8137:
-  RFC8174:
-  RFC8446:
-  RFC8610:
-  RFC8615:
-  RFC8126:
   RFC8995:
   RFC9031:
+  I-D.ietf-cose-cbor-encoded-cert:
+  I-D.ietf-iotops-7228bis:
   I-D.ietf-jose-pqc-kem:
   I-D.ietf-lake-reqs:
   I-D.ietf-lake-edhoc-impl-cons:
@@ -140,8 +144,8 @@ venue:
 --- abstract
 
 Ephemeral Diffie-Hellman Over COSE (EDHOC) is a lightweight authenticated key exchange protocol intended for use in constrained scenarios.
-This document specifies Lightweight Authorization using EDHOC (ELA).
-The procedure allows authorizing enrollment of new devices using the extension point defined in EDHOC.
+This document specifies lightweight authorization using EDHOC (ELA).
+The procedure allows authorizing enrollment of new devices using the External Authorization Data (EAD) extension point defined in EDHOC.
 ELA is applicable to zero-touch onboarding of new devices to a constrained network leveraging trust anchors installed at manufacture time.
 
 --- middle
@@ -149,18 +153,18 @@ ELA is applicable to zero-touch onboarding of new devices to a constrained netwo
 # Introduction  {#intro}
 
 
-For constrained IoT deployments {{RFC7228}} the overhead and processing contributed by security protocols may be significant, which motivates the specification of lightweight protocols that are optimizing, in particular, message overhead (see {{I-D.ietf-lake-reqs}}).
-This document describes Lightweight Authorization using EDHOC (ELA), a procedure for augmenting the lightweight authenticated Diffie-Hellman key exchange EDHOC {{RFC9528}} with third party-assisted authorization.
+For constrained IoT deployments {{I-D.ietf-iotops-7228bis}} the overhead and processing contributed by security protocols may be significant, which motivates the specification of lightweight protocols that are optimizing, in particular, message overhead (see {{I-D.ietf-lake-reqs}}).
+This document describes lightweight authorization using EDHOC (ELA), a procedure for augmenting the lightweight authenticated Diffie-Hellman key exchange EDHOC {{RFC9528}} with third party-assisted authorization.
 
 ELA involves a device, a domain authenticator, and an enrollment server.
 The device and domain authenticator perform mutual authentication and authorization, assisted by the enrollment server that provides relevant authorization information to the device (a "voucher") and to the authenticator. The high-level model is similar to BRSKI {{RFC8995}}.
 
-In this document, we consider the target interaction for which authorization is needed to be "enrollment", for example joining a network for the first time (e.g., {{RFC9031}}), but it can be applied to authorize other target interactions.
+In this document, the target interaction for which authorization is needed is "enrollment", for example joining a network for the first time (e.g., {{RFC9031}}), but ELA can be applied to authorize other target interactions.
 
 The enrollment server may represent the manufacturer of the device, or some other party with information about the device from which a trust anchor has been pre-provisioned into the device.
 The (domain) authenticator may represent the service provider or some other party controlling access to the network in which the device is enrolling.
 
-ELA assumes that authentication between device and authenticator is performed with EDHOC {{RFC9528}}, and defines the integration of a lightweight authorization procedure using the External Authorization Data (EAD) fields defined in EDHOC.
+ELA assumes that authentication between device and authenticator is performed with EDHOC {{RFC9528}} and defines the integration of a lightweight authorization procedure using the External Authorization Data (EAD) fields defined in EDHOC.
 
 ELA enables a low message count by performing authorization in parallel with authentication during an enrollment process, instead of in sequence, which is common for network access.
 It further reuses protocol elements from EDHOC, leading to reduced message sizes on constrained links.
@@ -171,8 +175,8 @@ This protocol is applicable to a wide variety of settings, and can be mapped to 
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}} when, and only when, they appear in all capitals, as shown here.
 
-Readers are expected to have an understanding of CBOR {{RFC8949}}, CDDL {{RFC8610}}, and EDHOC {{RFC9528}}.
-Appendix C.1 of {{RFC9528}} contains some basic info about CBOR.
+Readers are expected to have an understanding of Concise Binary Object Representation (CBOR) {{RFC8949}}, Concise Data Definition Language (CDDL) {{RFC8610}}, and EDHOC {{RFC9528}}.
+{{Appendix C.1 of RFC9528}} contains some basic info about CBOR.
 
 # Protocol Outline {#outline}
 
@@ -191,8 +195,7 @@ Note the cardinality of the involved parties. It is expected that the domain aut
 
 ~~~~~~~~~~~ aasvg
 
-                Voucher_
-                Info
+            Voucher_Info
 +----------+      |     +---------------+           +---------------+
 |          +------+---->|               |  Voucher  |               |
 |          |<-----+-----+    Domain     |  Request  |   Enrollment  |
@@ -209,7 +212,10 @@ Note the cardinality of the involved parties. It is expected that the domain aut
 
 # Assumptions
 
-The protocol is based on the following pre-existing relations between the device (U), the domain authenticator (V) and the enrollment server (W), see {{fig-trust}}.
+ELA supports both the case where U is the EDHOC Initiator and the case where U is the EDHOC Responder.
+For clarity, this document presents the protocol with U as the Initiator, except in {{reverse-u-responder}}, which presents the case where U is the Responder.
+
+The protocol is based on the following pre-existing relations between the device (U), the domain authenticator (V), and the enrollment server (W), see {{fig-trust}}.
 
 * U and W have an explicit relation: U is configured with a public key of W, see {{device}}.
 * V and W have an implicit relation, e.g., based on web PKI with trusted CA certificates, see {{domain-auth}}.
@@ -243,10 +249,10 @@ V may be able to access credentials over non-constrained networks, but U may be 
 
 ## Device (U) {#device}
 
-To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}} or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3 or be provisioned to V over a non-constrained network, leveraging a credential identifier in ID_CRED_I (see {{fig-protocol}}).
+To authenticate to V, the device (U) runs EDHOC in the role of Initiator with authentication credential CRED_U, for example, an X.509 certificate {{RFC5280}}, a C509 certificate {{I-D.ietf-cose-cbor-encoded-cert}}, or a CBOR Web Token (CWT, {{RFC8392}}). CRED_U may, for example, be carried by value in ID_CRED_I of EDHOC message_3, or be provisioned to V over a non-constrained network thus leveraging a compact credential identifier in ID_CRED_I (see {{fig-protocol}}).
 
 U also needs to identify itself to W, for which it reuses ID_CRED_I.
-Note that while typically ID_CRED_I is treated as a field that only needs to be understood between two EDHOC peers (here U and V), in this case ID_CRED_I also MUST be formatted in a way that it is unambiguous to W.
+Note that while ID_CRED_I is typically treated as a field that only needs to be understood between two EDHOC peers (here U and V), in this case ID_CRED_I also MUST be formatted in a way that it is unambiguous to W.
 W will use ID_CRED_I to determine if the device with this identifier is authorized to enroll with V.
 
 U is also provisioned with information about W:
@@ -256,7 +262,7 @@ U is also provisioned with information about W:
 
 ## Domain Authenticator (V) {#domain-auth}
 
-To authenticate to U, the domain authenticator (V) runs EDHOC in the role of Responder with an authentication credential CRED_V containing a public key of V, see {{V_2}}. This proves to U the possession of the private key corresponding to the public key of CRED_V. CRED_V typically needs to be transported to U in EDHOC (using  ID_CRED_R = CRED_V, see {{Section 3.5.2 of RFC9528}}) since there is no previous relation between U and V.
+To authenticate to U, the domain authenticator (V) runs EDHOC in the role of Responder with an authentication credential CRED_V containing a public key of V, see {{V_2}}. This proves to U the possession of the private key corresponding to the public key of CRED_V. CRED_V typically needs to be transported to U in an EDHOC message (using  ID_CRED_R = CRED_V, see {{Section 3.5.2 of RFC9528}}) since there is no previous relation between U and V.
 
 V and W need to establish a secure (confidentiality and integrity protected) connection for the Voucher Request/Response protocol.
 Furthermore, W needs to access the same credential CRED_V that V uses with U (to compute the Voucher), and V needs to prove to W the possession of the private key corresponding to the public key of CRED_V.
@@ -265,20 +271,20 @@ V MUST authenticate to W using the same credential CRED_V as with U.
 Note that the type of credential used by V will depend on what is supported by U and W.
 U can signal its supported credential types by advertising EDHOC Application Profiles {{I-D.ietf-lake-app-profiles}}, specifically by using the "cred_types" element.
 
-Regarding the secure channel between V and W, the choice of protocols may affect which type of credential and methods should be used by V.
-For example, in case V and W select TLS for the secure channel and PoP, then CRED_V is an X.509 certificate, and the EDHOC method used by V is signature-based.
+Regarding the secure channel between V and W, the choice of protocols may affect which type of credential and EDHOC methods should be used by V.
+For example, in case V and W select (D)TLS {{RFC9846}} {{RFC9147}} for the secure channel and PoP, then CRED_V is an X.509 certificate and the EDHOC method used by V is signature-based.
 Some of the possible combinations of protocols to secure the connection between V and W are listed in {{creds-table}} below.
 
-| Secure channel between V and W | Proof-of-Possession from V to W | Type of CRED_V | EDHOC method used by V |
+| Secure channel between V and W | Proof of Possession from V to W | Type of CRED_V | EDHOC method used by V |
 |--|--|--|--|
-| [D]TLS 1.3 with mutual authentication, where V is the client and W is the server. | Provided by [D]TLS. | Restricted to types that are supported by both [D]TLS and EDHOC, e.g., X.509 certificates. | V MUST authenticate using a signature. |
-| [D]TLS 1.3, where V is the client and W is the server. | Run an EDHOC session on top of the TLS-protected channel. | Any type supported by EDHOC, e.g., X.509, C509, CWT, or CCS. | Any method may be used. |
-| EDHOC and OSCORE, where V is the initiator and W is the responder.    | Already provided by EDHOC during the setup of the secure channel. | Any type supported by EDHOC. | Any method may be used. |
+| (D)TLS 1.3 with mutual authentication, where V is the client and W is the server. | Provided by (D)TLS. | Restricted to types that are supported by both (D)TLS and EDHOC, e.g., X.509 certificates. | V MUST authenticate using a signature. |
+| (D)TLS 1.3, where V is the client and W is the server. | Run an EDHOC session on top of the TLS-protected channel. | Any type supported by EDHOC, e.g., X.509 certificates, C509 certificates, CWT, or CCS. | Any method may be used. |
+| EDHOC and OSCORE, where V is the Initiator and W is the Responder.    | Already provided by EDHOC during the setup of the secure channel. | Any type supported by EDHOC. | Any method may be used. |
 {: #creds-table title="Examples of how to secure the connection between V and W." cols="l l l"}
 
 Note also that the secure connection between V and W may be long-lived and reused for multiple voucher requests/responses.
 
-Other details of proof-of-possession related to CRED_V and transport of CRED_V are out of scope of this document.
+Other details about the proof of possession related to CRED_V and about the transport of CRED_V are out of the scope of this document.
 
 
 
@@ -321,7 +327,7 @@ U                              V                                       W
 |                              +<---  ---  ---  ---  ---  ---  ---  -->|
 |                              |      (e.g., TLS with server cert.)    |
 |                              |                                       |
-|                              |   Proof-of-possession w.r.t. CRED_V   |
+|                              |   Proof of possession w.r.t. CRED_V   |
 |                              +<---  ---  ---  ---  ---  ---  ---  -->|
 |                              |            (e.g., EDHOC)              |
 |                              |                                       |
@@ -359,7 +365,7 @@ U                              V                                       W
 |                              |                                       |
 
 ~~~~~~~~~~~
-{: #fig-protocol title="Overview of ELA: W-assisted authorization of U and V to each other: EDHOC between U and V, and Voucher Request/Response between V and W. Before the protocol, V and W are assumed to have established a secure channel and performed proof-of-possession of relevant keys. Credential lookup of CRED_U may involve W or other credential database." artwork-align="center"}
+{: #fig-protocol title="Overview of ELA: W-assisted authorization of U and V to each other: EDHOC between U and V, and Voucher Request/Response between V and W. Before the protocol, V and W are assumed to have established a secure channel and performed proof of possession of relevant keys. Credential lookup of CRED_U may involve W or other credential database." artwork-align="center"}
 
 
 
@@ -369,17 +375,15 @@ The ELA protocol illustrated in {{fig-protocol}} reuses several components of ED
 
 * SUITES_I includes the cipher suite for EDHOC selected by U, and also defines the algorithms used between U and W (see {{Section 3.6 of RFC9528}}):
 
-    * EDHOC AEAD algorithm: used to generate voucher
+    * EDHOC AEAD algorithm: used to generate the voucher
     * EDHOC hash algorithm: used for key derivation
     * EDHOC key exchange algorithm: used to calculate the shared secret between U and W
 
 * EAD_3, EAD_4 are the External Authorization Data message fields of message_3 and message_4, respectively, see {{Section 3.8 of RFC9528}}.
-In case U acts as Responder (see {{reverse-u-responder}}), EAD_2 and EAD_3 are used in message_2 and message_3, respectively.
 This document specifies two new EAD items, with ead_label = TBD1 and TBD2, see {{iana-ead}}.
 
-* ID_CRED_I and ID_CRED_R are used to identify the authentication credentials CRED_U and CRED_V, respectively. As shown at the bottom of {{fig-protocol}}, V may use W to obtain CRED_U.
+* ID_CRED_I and ID_CRED_R are used to identify the authentication credentials CRED_U and CRED_V, respectively. V may obtain CRED_U from W by setting the Fetch_CRED_U flag in the Voucher Request, see {{voucher_request}}.
 By default, CRED_V is transported in ID_CRED_R in message_2, see {{V_2}}.
-In case U is Responder, CRED_V is transported in ID_CRED_I in message_3.
 
 The protocol also reuses the EDHOC_Extract and EDHOC_Expand key derivation from EDHOC (see {{Section 4 of RFC9528}}).
 
@@ -387,9 +391,9 @@ The intermediate pseudo-random key PRK is derived using EDHOC_Extract():
 
   * PRK = EDHOC_Extract(salt, IKM)
     * where salt = 0x (the zero-length byte string)
-    * Computation of IKM depends on the EDHOC method in use.
-      * If the method is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or vice versa), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-W}}.
-      * If the method is based on a Key Encapsulation Mechanism (KEM), IKM is the KEM shared secret resulting from encapsulating PK_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
+    * Computation of IKM depends on the EDHOC key exchange algorithm of the selected cipher suite SS.
+      * If the algorithm is based on Diffie-Hellman, IKM is computed as an ECDH cofactor Diffie-Hellman shared secret from the public key of W, PK_W, and the private key corresponding to G_U (or vice versa), see Section 5.7.1.2 of {{NIST-800-56A}} and {{U-W}}.
+      * If the algorithm is a Key Encapsulation Mechanism (KEM), IKM is the KEM shared secret resulting from encapsulating PK_W, see Section 2.2 of {{NIST-800-227}}. For example, the use of ML-KEM in COSE is currently being specified at {{I-D.ietf-jose-pqc-kem}}.
 
 The output keying material OKM is derived from PRK using EDHOC_Expand(), which is defined in terms of the EDHOC hash algorithm of the selected cipher suite SS, see {{Section 4.1.2 of RFC9528}}:
 
@@ -429,9 +433,9 @@ Voucher_Info_Seq = [ ; used as a CBOR sequence, not array
 where
 
 * LOC_W is a CRI used by V to locate W, where CRI is defined in {{Section 5.1 of I-D.ietf-core-href}}.
-* EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC method being used in the current session:
-  * if the method is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
-  * if the method is based on a PQC KEM, the device performs key encapsulation and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
+* EK_CT is a field containing either an ephemeral Diffie-Hellman key or a KEM ciphertext, depending on the EDHOC key exchange algorithm of the selected cipher suite SS:
+  * if the algorithm is based on Diffie-Hellman, the device generates an ephemeral Diffie-Hellman key pair, where the public part G_U is placed in the EK_CT field. The private part of G_U will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
+  * if the algorithm is a KEM, the device performs key encapsulation using the public key of W, PK_W, and places the resulting ciphertext CT in the EK_CT field. Here, the secret emitted by the encapsulation mechanism will be used to decrypt and verify the voucher, see {{voucher}} and {{reuse}}.
 
 ### Voucher {#voucher}
 
@@ -446,7 +450,7 @@ Voucher = bstr
 ~~~~~~~~~~~
 
 Its corresponding plaintext value consists of an opaque field that can be used by W to convey information to U, such as a voucher scope.
-The authentication tag present in the ciphertext is also bound to the current EDHOC handshake, the identity of U, and the credential of V as described below.
+The authentication tag present in the ciphertext is also bound to the current EDHOC session, the identity of U, and the credential of V as described below.
 
 * The encryption key K and nonce IV are derived as specified below.
 * 'protected' is a byte string of size 0
@@ -474,7 +478,7 @@ It is opaque to V, while the application in U and W can read its contents.
 
 * H_12 is H(H(message_1), message_2), used to bind the voucher to the current EDHOC session. It is computed using the EDHOC hash algorithm of the selected cipher suite SS specified in SUITES_I of EDHOC message_1. H_12 is sent to W as part of the voucher request, see {{voucher_request}}.
 
-* ID_CRED_I is the identifier of U transmitted via the voucher request.
+* ID_CRED_I is the identifier of CRED_U transmitted via the voucher request. It is a CBOR byte string whose value is the CBOR encoding of the ID_CRED_I map. This is the encoding of ID_CRED_I as used in context_3 (see {{Section 5.4.2 of RFC9528}}), i.e., the full CBOR map, including when the compact encoding of {{Section 3.5.3.2 of RFC9528}} is used in message_3. Wrapping the map in a byte string lets V and W handle it as opaque bytes, so that W computes the same external_aad as U without decoding and re-encoding the map, which may not reproduce the encoding used by U (see {{Section 3.5.3 of RFC9528}}). This follows the rationale for the COSE protected header in {{Section 3 of RFC9052}}.
 
 * CRED_V is the credential used by V to authenticate to U and W, see {{V_2}} and {{creds-table}}.
 
@@ -499,7 +503,7 @@ This section describes the processing in U and V, which includes the EDHOC proto
 #### Processing in U
 
 U composes EDHOC message_1 using authentication method, identifiers, etc. according to an agreed application profile, see {{Section 3.9 of RFC9528}}.
-The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the key agreement algorithm used between U and W.
+The selected cipher suite, in this document denoted SS, applies also to the interaction with W as detailed in {{reuse}}, in particular, with respect to the key exchange algorithm used between U and W.
 U sends EDHOC message_1 to V.
 
 #### Processing in V
@@ -533,15 +537,16 @@ If a Voucher is used, U learns this when it verifies the Voucher in message_4, s
 U prepares EDHOC message_3 with EAD item (-TBD1, Voucher_Info) included in EAD_3, where Voucher_Info is specified in {{U-W}}.
 The negative sign indicates that the EAD item is critical, see {{Section 3.8 of RFC9528}}.
 
-#### Processing in V
+#### Processing in V {#V_3}
 
 V receives EDHOC message_3 from U and processes it as specified in {{Section 5.4.3 of RFC9528}}, with the additional step of processing the EAD item in EAD_3.
 Since the EAD item is critical, if V does not recognize it or it contains information that V cannot process, then V MUST abort the EDHOC session, see {{Section 3.8 of RFC9528}}.
 The ead_label = -TBD1 triggers the voucher request to W as described in {{V-W}}.
 The exchange between V and W needs to be completed successfully for the EDHOC session to be continued.
+That is, if V does not receive a valid Voucher Response from W, then V MUST abort the EDHOC session with U.
 
 As part of normal processing of EDHOC message_3, V must verify the credential of U.
-It is up to the application to decide whether to verify the credential of U before or after the voucher request to W, see pre and post -verification processing of EAD items in {{I-D.ietf-lake-edhoc-impl-cons}}.
+It is up to the application to decide whether to verify the credential of U before or after the voucher request to W, see pre- and post-verification processing of EAD items in {{I-D.ietf-lake-edhoc-impl-cons}}.
 
 In case V has access to a credential database, it MAY query it with ID_CRED_I to obtain a corresponding CRED_U and verify the identity of U before making the Voucher request to W.
 If the verification of CRED_U fails, the EDHOC session is aborted.
@@ -552,13 +557,13 @@ If the response contains CRED_U, V then continues processing EDHOC message_3 whe
 Even upon reception of a successful voucher response from W, if the verification of CRED_U fails, the EDHOC session is aborted.
 In this scenario, the EAD item in EAD_3 is processed as a pre-verification item {{I-D.ietf-lake-edhoc-impl-cons}}.
 
-In case V fails to obtain CRED_U, the session is aborted.
+In case V fails to obtain CRED_U, V MUST abort the EDHOC session with U.
 
 ### Message 4 {#m4}
 
 #### Processing in V  {#V_4}
 
-At this point, V has authenticated U, and received a valid voucher response from W as described in {{V-W}}.
+At this point, V has authenticated U and received a valid voucher response from W as described in {{V-W}}.
 
 V prepares EDHOC message_4 where, if the voucher response contains a voucher, V includes the critical EAD item (-TBD2, Voucher) in EAD_4, i.e., ead_label = -TBD2 and ead_value = Voucher, as specified in {{voucher}}.
 
@@ -600,8 +605,8 @@ where
 * SS is the selected cipher suite used in the EDHOC session between U and V.
 * EK_CT is either an ephemeral DH public key or a KEM ciphertext set by U, as defined in {{U-W}}.
 * H_12 corresponds to H(H(message_1), message_2). It is computed as defined in {{voucher}}.
-* ID_CRED_I is an identifier of CRED_U and is used as the identity of U during ELA execution, see {{device}}.
-* Fetch_CRED_U is a flag indicating whether W should try to load and return the credential CRED_U corresponding to ID_CRED_I.
+* ID_CRED_I is an identifier of CRED_U and is used as the identity of U during ELA execution, see {{device}}. It is encoded as in {{voucher}}.
+* Fetch_CRED_U is a flag indicating whether W should try to retrieve and return the credential CRED_U corresponding to ID_CRED_I.
 
 #### Processing in W
 
@@ -611,13 +616,13 @@ W extracts from Voucher_Request:
 * SS - the selected cipher suite.
 * EK_CT - either an ephemeral DH public key or a KEM ciphertext.
 * H_12 - the hash of message_1 and message_2.
-* ID_CRED_I - the identifier of U.
+* ID_CRED_I - the identity of U.
 * Fetch_CRED_U - flag indicating whether V requests W to return CRED_U.
 
 W verifies that it supports the cipher suite SS, and uses the corresponding EDHOC Key Exchange Algorithm to determine whether EK_CT contains an ephemeral Diffie-Hellman public key or a KEM ciphertext.
 
-W uses H_12 as a session identifier, and associates it to the device identifier ID_CRED_I.
-Note that EK_CT is unique, as the ephemeral key or the ciphertext MUST not be reused, therefore H_12 is expected to be unique.
+W uses H_12 as a session identifier, and associates it with the device identity ID_CRED_I.
+Note that EK_CT is unique, as the ephemeral key or the ciphertext must not be reused, therefore H_12 is expected to be unique.
 
 If processing fails up until this point, the protocol SHALL be aborted with an error code signaling a generic issue with the request, see {{rest-voucher-request}}.
 
@@ -626,7 +631,7 @@ W uses ID_CRED_I to look up the associated authorization policies for U and enfo
 If ID_CRED_I is known by W, but authorization fails, the protocol SHALL be aborted with an error code signaling an access control issue, see {{err-handling}} and {{rest-voucher-request}}.
 
 If Fetch_CRED_U is true, W uses ID_CRED_I to try to retrieve the corresponding credential CRED_U.
-If retrieval succeeds, W MUST include CRED_U in the voucher response, see {{voucher_response}}.
+If the retrieval succeeds, W MUST include CRED_U in the voucher response, see {{voucher_response}}.
 If the retrieval fails, W sends the voucher response without CRED_U.
 If Fetch_CRED_U is false, W MUST NOT include CRED_U in the voucher response.
 
@@ -694,7 +699,7 @@ error_content = (
 Where:
 
 * REJECT_TYPE specifies the type and handling of the optional REJECT_INFO field.
-* REJECT_INFO, if present, provides verifiable and actionable information to the receiver about the error, so that an automated action may be taken to try to obtain access, e.g. in the form of a retry request.
+* REJECT_INFO, if present, provides verifiable and actionable information to the receiver about the error, so that an automated action may be taken to try to obtain access, e.g., in the form of a retry request.
 
 ~~~~~~~~~~~ aasvg
 +-------------+---------------+--------------------------------------+
@@ -714,7 +719,7 @@ ELA uses the EDHOC Error "Access denied" in the following way:
 * W generates error_content and transfers it to V via the secure connection.
   If REJECT_TYPE is 1, then REJECT_INFO is encrypted from W to U using the EDHOC AEAD algorithm.
   W signals the error via an appropriate status code in the REST interface, as defined in {{rest-voucher-request}}.
-* V receives error_content, prepares an EDHOC "Access denied" error, and sends it to U.
+* V receives error_content, prepares an "Access denied" EDHOC error message, and sends it to U.
 * U receives the error message and extracts the error_content.
   If REJECT_TYPE is 1, then U decrypts REJECT_INFO, based on which it may retry to gain access.
 
@@ -744,11 +749,11 @@ This section presents a protocol variant in which U is the EDHOC Responder.
 This may allow optimizations in certain constrained network technologies.
 For example, one use case is having V broadcast message_1, to which U responds with a message_2 whose EAD_2 field contains Voucher_Info.
 
-Note that this is different from the EDHOC reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, since we make no assumption about whether U or V is a CoAP server.
+Note that this is different from the EDHOC reverse message flow defined in {{Appendix A.2.2 of RFC9528}}, since no assumption is made about whether U or V is a CoAP server {{RFC7252}}.
 
 ### Baseline: U is the Initiator {#u-initiator}
 
-For clarity, we first present the regular flow with U as Initiator, as described in {{protocol-overview}} and {{U-V}}.
+For clarity, the regular flow with U as Initiator, as described in {{protocol-overview}} and {{U-V}}, is presented first.
 Note that Voucher_Info and Voucher are carried in EDHOC message_3 and message_4, respectively.
 
 ~~~~~~~~~~~ aasvg
@@ -786,16 +791,18 @@ In the ELA regular flow, once message_4 processing is finalized (including proce
 
 ### U is the Responder {#u-responder}
 
-ELA also works with U as the EDHOC Responder, a setup we refer to as the "ELA reverse flow", as shown in {{fig-u-responder}}.
+ELA also works with U as the EDHOC Responder, a setup referred to as the "ELA reverse flow", as shown in {{fig-u-responder}}.
 
-We present this variant as a set of changes to the regular protocol flow.
-That is, here we only describe the differences in processing, when compared to the ELA regular flow.
+This variant is presented as a set of changes to the regular protocol flow.
+That is, this section only describes the differences in processing, when compared to the ELA regular flow.
 
 Here is a summary of the changes needed in the ELA reverse flow:
 
 * Voucher_Info and Voucher are transported in EDHOC message_2 and message_3, respectively (instead of message_3 and message_4).
 * The EAD_2 and EAD_3 fields carry critical EAD items identified with labels -TBD1 and -TBD2, respectively.
 * The VREQ / VRES protocol takes place between message_2 and message_3.
+* CRED_V is transported in ID_CRED_I in message_3 (instead of ID_CRED_R in message_2).
+* SUITES_I is prepared by V (instead of U), hence the selected cipher suite SS is chosen by V (instead of U).
 
 ~~~~~~~~~~~ aasvg
 +-----+-----+                   +-----------+
@@ -898,33 +905,33 @@ The Voucher is authenticated by W in both flows.
 # REST Interface at W {#rest_interface}
 
 The interaction between V and W is enabled through a RESTful interface exposed by W.
-This RESTful interface MAY be implemented using either HTTP or CoAP.
+This RESTful interface MAY be implemented using either HTTP {{RFC9110}} {{RFC9112}} or CoAP {{RFC7252}}.
 V SHOULD access the resources exposed by W through the protocol indicated by the scheme of LOC_W.
 
 ## Scheme "https" {#scheme-https}
 In case the scheme indicates "https", V MUST perform a TLS handshake with W and access the resources defined in {{uris}} using HTTP.
-If the authentication credential CRED_V can be used in a TLS handshake, e.g., an X.509 certificate of a signature public key, then V SHOULD use it to authenticate to W as a client.
-If the authentication credential CRED_V cannot be used in a TLS handshake, e.g., if the public key is a static key, then V SHOULD first perform a TLS handshake with W using available compatible keys.
-V MUST then perform an EDHOC session over the TLS connection proving to W the possession of the private key corresponding to CRED_V.
-Performing the EDHOC session is only necessary if V did not authenticate with CRED_V in the TLS handshake with W.
+If the authentication credential CRED_V can be used in a TLS handshake, e.g., it is an X.509 certificate of a signature public key, then V SHOULD use it to authenticate to W as a client.
+If V does not do so (e.g., the format of CRED_V cannot be used in TLS, or the public key of CRED_V is a static key to use for key exchange), then V first performs a TLS handshake with W, potentially using an alternative, compatible authentication credential to authenticate to W.
+V MUST then perform an EDHOC session over the established TLS connection with W, using CRED_V as its authentication credential and thus proving to W the possession of the private key corresponding to CRED_V.
+Performing the EDHOC session is REQUIRED only if V did not authenticate with CRED_V in the TLS handshake with W.
 
-The relationship between V and W is long-lived.  HTTP/1.1 and higher support persistent connections, and SHOULD be used in order to reduce overhead if a flood of new devices need to be onboarded.  Support for TLS session resumptions tickets {{RFC8446, Section 2.2}} is appropriate for longer term associations.
-While a policy for renewal of the TLS connection should be applied, it is out of scope of this document.
+The relationship between V and W is long-lived.  HTTP/1.1 and higher support persistent connections and SHOULD be used in order to reduce overhead if a flood of new devices need to be onboarded.  Support for TLS session resumptions tickets {{RFC9846, Section 2.2}} is appropriate for longer term associations.
+While a policy for renewal of the TLS connection should be applied, it is out of the scope of this document.
 
 ## Scheme "coaps"
-In case the scheme indicates "coaps", V SHOULD perform a DTLS handshake with W and access the resources defined in {{uris}} using CoAP.
+In case the scheme indicates "coaps", V MUST perform a DTLS handshake {{RFC9147}} with W and access the resources defined in {{uris}} using CoAP.
 The normative requirements in {{scheme-https}} on performing the DTLS handshake and EDHOC session remain the same, except that TLS is replaced with DTLS.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the DTLS session.
 
 ## Schemes "coap" and "coap+tcp"
-In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V SHOULD perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
-The authentication credential in this EDHOC session MUST be CRED_V.
+In case the scheme indicates "coap" or "coap+tcp" {{RFC8323}}, V MUST perform an EDHOC session with W, as specified in {{Appendix A of RFC9528}} and access the resources defined in {{uris}} using OSCORE {{RFC8613}} and CoAP.
+The authentication credential used by V in this EDHOC session MUST be CRED_V.
 As in {{scheme-https}}, it is RECOMMENDED to allow reuse of the EDHOC session.
 
 ## URIs {#uris}
 
 The URIs defined below are valid for both HTTP and CoAP.
-W MUST support the use of the path-prefix "/.well-known/", as defined in {{RFC8615}}, and the registered name "lake-authz".
+W MUST support the use of the path prefix "/.well-known/", as defined in {{RFC8615}}, and the registered name "lake-authz" (see {{iana-wk}}).
 A valid URI in case of HTTP thus begins with
 
 * "https://www.example.com/.well-known/lake-authz"
@@ -944,7 +951,7 @@ Each operation specified in the following is indicated by a path-suffix.
 
 To request a voucher, V MUST issue a request such that:
 
-* Method is POST
+* Request method is POST
 * Payload is the serialization of the Voucher Request object, as specified in {{voucher_request}}.
 * Content-Format (Content-Type) is set to "application/lake-authz-voucherrequest+cbor"
 
@@ -957,22 +964,7 @@ In case of successful processing at W, W MUST issue a response such that:
 In case of error, two cases should be considered:
 
 * Voucher Request processing fails. In this case, W MUST reply with 400 Bad Request if using HTTP, or 4.00 if using CoAP.
-* U is not authorized: this happens if W is able to process the Voucher Request, but the access policies forbid authorization. For example, the policy could enforce enrollment to a restricted list of identities, within a delimited time window, via a specific V, etc. In this case, W MUST reply with a 403 Forbidden code if using HTTP, or 4.03 if using CoAP; the payload is the serialized error_content object, with Content-Format (Content-Type) set to "application/lake-authz-vouchererror+cbor". The payload MAY be used by V to prepare an EDHOC error "Access Denied", see {{err-handling}}.
-
-### Certificate Request (/certrequest)
-
-V requests the public key certificate of U from W through the "/certrequest" path-suffix.
-To request U's authentication credential, V MUST issue a request such that:
-
-* Method is POST
-* Payload is the serialization of the ID_CRED_I (ID_CRED_R) object, as received in EDHOC message_3 (message_2).
-* Content-Format (Content-Type) is set to "application/lake-authz-certrequest+cbor"
-
-In case of a successful lookup of the authentication credential at W, W MUST issue a response such that:
-
-* Status code is 200 OK if using HTTP, or 2.04 Changed if using CoAP
-* Payload is the serialized CRED_U
-* Content-Format (Content-Type) is set to "application/lake-authz-certresponse+cbor"
+* U is not authorized: this happens if W is able to process the Voucher Request, but the access policies forbid authorization. For example, the policy could enforce enrollment to a restricted list of identities, within a delimited time window, via a specific V, etc. In this case, W MUST reply with a 403 Forbidden code if using HTTP, or 4.03 if using CoAP; the payload is the serialized error_content object, with Content-Format (Content-Type) set to "application/lake-authz-vouchererror+cbor". V processes the payload as specified in {{err-handling}}.
 
 # Security Considerations  {#sec-cons}
 
@@ -982,18 +974,18 @@ These considerations apply to the ELA regular flow.
 For considerations about the ELA reverse flow, see {{reverse-u-responder}}.
 
 The Voucher_Info and Voucher structs are sent over authenticated channels that are confidentiality and integrity protected between U and V, i.e., in EDHOC fields EAD_3 and EAD_4.
-While ELA reuses several components of EDHOC, it does not reuse keys from EDHOC (such as the ephemeral key G_X when using DH) to protect fields Voucher_Info and Voucher.
+While ELA reuses several components of EDHOC, it does not reuse keys from EDHOC (such as the ephemeral key G_X when using DH) to protect the fields Voucher_Info and Voucher.
 Reuse of G_X is avoided since ephemeral keys are expected to be used only once.
-Similarly, for KEM-based methods a fresh encapsulation is performed for each session.
+Similarly, when the EDHOC key exchange algorithm is a KEM, a fresh encapsulation is performed for each session.
 
 ELA is compatible with the currently standardized Diffie-Hellman shared secret derivation of EDHOC.
 Considering cryptographic recommendations by government agencies and the industry, ELA is also compatible with post-quantum cryptography primitives for deriving a shared secret, namely via the EK_CT field which can contain a KEM ciphertext according to the selected cipher suite.
 Post-quantum KEMs that could be used in EDHOC are currently under standardization in COSE {{I-D.ietf-jose-pqc-kem}}.
 
 EDHOC provides identity protection of the Initiator, here the device.
-In ELA, the device U will share its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with V.
+In ELA, the device U shares its identity with an authenticated V, albeit before knowing (via the Voucher received from W) whether U is authorized to interact with V.
 
-W may be used for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{U-V}}.
+V may rely on W for lookup of CRED_U from ID_CRED_I, or this credential lookup function may be separate from the authorization function of W, see {{V_3}}.
 The trust model used here is that U reveals its identity to any V, before knowing if the ELA authorization flow will be successfully completed.
 In onboarding use cases, U MAY choose to use an onboarding-only identity, whereas future operational communications can use a different identity under the already established secure channel.
 
@@ -1002,23 +994,21 @@ Implementations MUST NOT omit message_4 when vouchers in message_4 are in use.
 
 # IANA Considerations  {#iana}
 
+This document has the following actions for IANA.
+
 ## EDHOC External Authorization Data Registry {#iana-ead}
 
 IANA has registered the following entries in the "EDHOC External Authorization Data" registry under the group name "Ephemeral Diffie-
    Hellman Over COSE (EDHOC)".
 
-| Name | Label | Description |
-| Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). |
-| Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). |
-{: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l"}
-
-The ead_label = TBD1 corresponds to the ead_value = Voucher_Info, which can be carried in either EAD_2 or EAD_3, depending on whether U acts as EDHOC Initiator or Responder, see {{reverse-u-responder}}.
-
-The ead_label = TBD2 corresponds to ead_value = Voucher, and can be carried in either EAD_3 or EAD_4, see {{reverse-u-responder}}.
+| Name | Label | Description | Reference |
+| Voucher_Info | TBD1 | Voucher_Info structure (a byte string), prepared by the Device (U). | \[\[this document\]\] |
+| Voucher | TBD2 | Voucher structure (a byte string), prepared by the Enrollment Server (W). | \[\[this document\]\] |
+{: #ead-table title="Addition to the EDHOC EAD registry" cols="r l l l"}
 
 Note for IANA reviewers: the preferred value range is 0-23 (Standards Action with Expert Review).
 
-## The Well-Known URI Registry
+## The Well-Known URI Registry {#iana-wk}
 
 IANA has registered the following entry in "The Well-Known URI Registry", using the template from {{RFC8615}}:
 
@@ -1034,15 +1024,15 @@ IANA has created a new registry under the registry group "Ephemeral Diffie-Hellm
 
 Registry Name: ELA Voucher Response Parameters
 
-Reference: [[this document]]
+Reference: \[\[this document\]\]
 
 The columns of the registry are Name, Label, CBOR Type, Description, Change Controller, and Reference, where Label is an integer and the other columns are text strings.
 The initial contents of the registry are shown in {{vres-table}}.
 For registrations made by IETF documents, the IETF is listed as Change Controller.
 
 | Name | Label | CBOR Type | Description | Change Controller | Reference |
-| Voucher | 1 | bstr | Voucher, prepared by the Enrollment Server (W) | IETF | [[this document]] |
-| CRED_U | 2 | bstr | Authentication credential of the Device (U) | IETF | [[this document]] |
+| Voucher | 1 | bstr | Voucher, prepared by the Enrollment Server (W) | IETF | \[\[this document\]\] |
+| CRED_U | 2 | bstr | Authentication credential of the Device (U) | IETF | \[\[this document\]\] |
 {: #vres-table title="ELA Voucher Response Parameters" cols="l r l l l l"}
 
 | Range | Registration Procedures |
@@ -1055,7 +1045,7 @@ Expert reviewers should take into consideration the guidelines in {{Section 10.1
 
 ## Media Types Registry
 
-IANA has added the media types "application/lake-authz-voucherrequest+cbor" to the "Media Types" registry.
+IANA has added the media types "application/lake-authz-voucherrequest+cbor", "application/lake-authz-voucherresponse+cbor", and "application/lake-authz-vouchererror+cbor" to the "Media Types" registry.
 
 ### application/lake-authz-voucherrequest+cbor Media Type Registration
 
@@ -1066,8 +1056,52 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor" to t
 * Encoding considerations: binary (CBOR)
 * Security considerations: See {{sec-cons}} of this document.
 * Interoperability considerations: N/A
-* Published specification: [[this document]] (this document)
-* Application that use this media type: To be identified
+* Published specification: \[\[this document\]\] (this document)
+* Applications that use this media type: To be identified
+* Fragment identifier considerations: N/A
+* Additional information:
+    * Magic number(s): N/A
+    * File extension(s): N/A
+    * Macintosh file type code(s): N/A
+* Person & email address to contact for further information: IETF LAKE Working Group (lake@ietf.org)
+* Intended usage: COMMON
+* Restrictions on usage: N/A
+* Author: LAKE WG
+* Change Controller: IETF
+
+### application/lake-authz-voucherresponse+cbor Media Type Registration
+
+* Type name: application
+* Subtype name: lake-authz-voucherresponse+cbor
+* Required parameters: N/A
+* Optional parameters: N/A
+* Encoding considerations: binary (CBOR)
+* Security considerations: See {{sec-cons}} of this document.
+* Interoperability considerations: N/A
+* Published specification: \[\[this document\]\] (this document)
+* Applications that use this media type: To be identified
+* Fragment identifier considerations: N/A
+* Additional information:
+    * Magic number(s): N/A
+    * File extension(s): N/A
+    * Macintosh file type code(s): N/A
+* Person & email address to contact for further information: IETF LAKE Working Group (lake@ietf.org)
+* Intended usage: COMMON
+* Restrictions on usage: N/A
+* Author: LAKE WG
+* Change Controller: IETF
+
+### application/lake-authz-vouchererror+cbor Media Type Registration
+
+* Type name: application
+* Subtype name: lake-authz-vouchererror+cbor
+* Required parameters: N/A
+* Optional parameters: N/A
+* Encoding considerations: binary (CBOR)
+* Security considerations: See {{sec-cons}} of this document.
+* Interoperability considerations: N/A
+* Published specification: \[\[this document\]\] (this document)
+* Applications that use this media type: To be identified
 * Fragment identifier considerations: N/A
 * Additional information:
     * Magic number(s): N/A
@@ -1081,11 +1115,13 @@ IANA has added the media types "application/lake-authz-voucherrequest+cbor" to t
 
 ## CoAP Content-Formats Registry
 
-IANA has added the following Content-Format number in the "CoAP Content-Formats" registry under the registry group "Constrained RESTful Environments (CoRE) Parameters".
+IANA has added the following Content-Format numbers in the "CoAP Content-Formats" registry under the registry group "Constrained RESTful Environments (CoRE) Parameters".
 
 | Content Type | Content Coding | ID | Reference |
-| application/lake-authz-voucherrequest+cbor | - | TBD3 | [[this document]] |
-{: #coap-content-formats title="Addition to the CoAP Content-Formats registry" cols="l l l"}
+| application/lake-authz-voucherrequest+cbor | - | TBD5 | \[\[this document\]\] |
+| application/lake-authz-voucherresponse+cbor | - | TBD6 | \[\[this document\]\] |
+| application/lake-authz-vouchererror+cbor | - | TBD7 | \[\[this document\]\] |
+{: #coap-content-formats title="Addition to the CoAP Content-Formats registry" cols="l l l l"}
 
 Note for IANA reviewers: the preferred value range is 0-255 (Expert Review).
 
@@ -1093,16 +1129,16 @@ Note for IANA reviewers: the preferred value range is 0-255 (Expert Review).
 
 # Optimization Strategies {#optimization-strat}
 
-When ELA is used for zero-touch enrollment of IoT devices, U may have little to no knowledge about V's available in its vicinity.
-This may lead to situations where U retries several times at different V's until it finds one that works.
+When ELA is used for zero-touch enrollment of IoT devices, U may have little to no knowledge about Vs that are available in its vicinity.
+This may lead to situations where U retries several times at different Vs until it finds one that works.
 This section presents two optimization strategies and different approaches to implement it.
-These strategies were developed to address scenarios where V's are radio gateways to which U wants to enroll, but may also be applicable to other use cases.
+These strategies were developed to address scenarios where Vs are radio gateways to which U wants to enroll, but may also be applicable to other use cases.
 
 ## Using EDHOC Application Profiles {#ela-profile}
 
-This section provides an example of how support for ELA can be advertised using EDHOC application profiles.
+This section provides an example of how support for ELA can be advertised using EDHOC application profiles (see {{Section 3.9 of RFC9528}}).
 
-Application Profiles for EDHOC {{I-D.ietf-lake-app-profiles}} defines mechanisms to describe and distribute parameters regarding the supported capabilities of EDHOC peers.
+The specification at {{I-D.ietf-lake-app-profiles}} defines mechanisms to describe and distribute parameters regarding the supported capabilities of EDHOC peers.
 Specifically, {{Section 5 of I-D.ietf-lake-app-profiles}} describes how EDHOC peers can advertise supported profiles by using fields EAD_1 and EAD_2 in EDHOC message_1 and message_2, respectively.
 
 Since the ELA regular flow uses message_3 and message_4, peers can advertise support for ELA, and refrain from attempting the protocol in case one does not support it.
@@ -1119,7 +1155,7 @@ For example, to advertise support for ELA in the regular flow, U prepares EAD_1 
 
 Where:
 
-* true indicates that U expects an application profile response from V in EAD_2, see {{Section 5.1 of I-D.ietf-lake-app-profiles}}
+* true indicates that U expects an analogous advertisement from V in EAD_2, see {{Section 5.1 of I-D.ietf-lake-app-profiles}}
 * APP-PROF-MINIMAL-CS-2 corresponds to a well-known EDHOC application profile (Method 3; Cipher Suite 2; CCS; kid), see {{Section 8 of I-D.ietf-lake-app-profiles}}
 * TBD1 and TBD2 correspond to the EAD labels registered in this document, see {{iana}}
 
@@ -1150,7 +1186,7 @@ For example, V_INFO may state that:
 V_INFO can be sent over a network beacon (see {{adv-beacon}}), which may require technology specific profiling, e.g., the IEEE 802.15.4 enhanced beacon may be extended according to {{RFC8137}}.
 Alternatively, V_INFO can be sent as part of an EAD field, as shown in {{adv-ead1}}.
 
-As a guideline for implementers, we define the following field that can be included in a V_INFO structure:
+As a guideline for implementers, this document defines the following field that can be included in a V_INFO structure:
 
 ~~~~~~~~~~~ cddl
 DOMAIN_ID: bstr
@@ -1159,7 +1195,7 @@ DOMAIN_ID: bstr
 The DOMAIN_ID field identifies the domain to which V belongs to, for example an URL or UUID.
 
 Below are three examples of how the advertisement strategy may be applied according to different application needs.
-The examples include sending V_INFO in network beacons, as part of EAD_1 in reverse message flow, or as part of a periodic CoAP multicast packet.
+The examples include sending V_INFO in network beacons, as part of EAD_1 in reverse message flow, or as part of a periodic CoAP message sent over multicast.
 The advantages, costs, and security impacts of each approach are also discussed.
 
 ### V_INFO in network beacons {#adv-beacon}
@@ -1206,7 +1242,7 @@ It requires, however, some profiling of the lower layer beacons.
 ### V_INFO in EAD_1 {#adv-ead1}
 
 The ELA reverse flow (see {{reverse-u-responder}}) allows implementing advertising where U first sends a trigger packet, in the format of a CoAP request that is broadcasted to the network.
-When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has label -TBD4 and value V_INFO (see {{strat-advertise}}).
+When a suitable V receives the solicitation, if it implements ELA, it should respond with an EDHOC message_1 whose EAD_1 has value V_INFO (see {{strat-advertise}}).
 
 ~~~~~~~~~~~ aasvg
 +-------+--------+                +-------+--------+
@@ -1236,14 +1272,16 @@ V_INFO = (
 )
 ~~~
 
-This approach enables a simple filtering mechanism, where only V's that support ELA will reply.
+This approach enables a simple filtering mechanism, where only Vs that support ELA will reply.
 In addition, it may not require layer-two profiling (in case the network allows transporting data before authorization).
 
-### V_INFO in a CoAP Multicast Packet {#adv-coap-mult}
+### V_INFO in a CoAP Message over Multicast {#adv-coap-mult}
 
-In this approach, V periodically multicasts a CoAP packet containing V_INFO, see {{fig-adv-coap-mult}}.
+In this approach, V periodically sends a CoAP request message over multicast conveying V_INFO as its payload, see {{fig-adv-coap-mult}}.
 Upon receiving one or more CoAP messages and processing V_INFO, U can decide whether or not to initiate the ELA protocol with a given V.
-Next, the application can either keep U acting as a server, and thus employ the EDHOC reverse flow, or implement a CoAP client and use the forward flow.
+Next, U can act as Initiator and start an EDHOC session with V by transporting EDHOC messages over CoAP (see {{Appendix A.2 of RFC9528}}).
+When doing so, the application can either keep U acting as a server and thus employ the EDHOC reverse message flow, or implement a CoAP client and thus employ the EDHOC forward message flow.
+The latter builds on the assumption that V also implements a CoAP server.
 
 ~~~~~~~~~~~ aasvg
 +--------+---------+                        +--------+---------+
